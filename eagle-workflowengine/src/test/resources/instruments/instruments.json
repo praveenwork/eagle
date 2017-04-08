@@ -1,0 +1,18 @@
+[  
+   {  
+      "name":"Cisco Systems Inc",
+      "type":"STOCK",
+      "symbol":"CSCO",
+      "exchnage":"SMART",
+      "primaryExchange":"NASDAQ",
+      "currency":"USD"
+   },
+   {  
+      "name":"Amazon.com Inc",
+      "type":"STOCK",
+      "symbol":"AMZN",
+      "exchnage":"SMART",
+      "primaryExchange":"NASDAQ",
+      "currency":"USD"
+   }
+]
