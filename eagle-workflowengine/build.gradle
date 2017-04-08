@@ -1,0 +1,21 @@
+dependencies {
+	compile project(':eagle-core')
+	compile project(':eagle-contract')
+	compile("org.hsqldb:hsqldb")
+	compile("org.apache.poi:poi:3.15")
+	compile("javax.mail:javax.mail-api:1.5.6")
+	compile("com.sun.mail:javax.mail:1.5.1")
+	
+	compile files('libs/twaclient.jar')
+
+	testCompile files('libs/twaclient.jar')
+	
+}
+
+bootRun {
+    systemProperties['spring.profiles.active'] = project.gradle.startParameter.systemPropertiesArgs['spring.profiles.active'];
+}
+
+bootRepackage {
+    enabled = true
+}
