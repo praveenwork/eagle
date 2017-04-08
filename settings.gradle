@@ -1,0 +1,2 @@
+rootProject.name = 'eagle-parent'
+include 'eagle-core', 'eagle-contract', 'eagle-workflowengine'
