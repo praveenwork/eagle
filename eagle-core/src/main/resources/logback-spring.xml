@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="consoleLoggingEnabled" source="eagle.config.logging.console-logging-enabled"/>
+
+    <if condition='property("consoleLoggingEnabled").contains("true")'>
+        <then>
+            <include resource="com/eagle/springboot/config/logging/eagle-console-logging.xml"/>
+        </then>
+        <else>
+            <include resource="com/eagle/springboot/config/logging/eagle-file-logging.xml"/>
+        </else>
+    </if>
+
+</configuration>

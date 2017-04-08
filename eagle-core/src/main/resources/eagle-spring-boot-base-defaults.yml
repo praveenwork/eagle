@@ -1,0 +1,79 @@
+eagle.config:
+  api-documentation:
+    # The allowed-resources refer to the security context, to make sure that it is accessible behind security
+    allowed-resources: /swagger**/**,/webjars/**,${springfox.documentation.swagger.v2.path}/**,${eagle.config.api-documentation.ui-redirect-resource}
+    enabled: true # Disable/Enable the API Dcoumentation configuration
+    resource-base-package: com.eagle # The base package to start the API Documentation scanning from
+    resource-path-regex: /.* # The path regex to apply (which paths should be documenetated - default is all paths found)
+    ui-redirect-resource: ${eagle.config.internals-resource.name}/docs # The redirect resoruce for swagger (standard API endpoint)
+    ui-resource: /swagger-ui.html # The direct swagger html file name
+  internals-resource:
+    name: /internals # Tne name of the "internals" resource to use
+    enabled: true # Enable/Disable the internals resource (and effectively it's sub-resources)
+    pattern: /internals**/** # The URL patter for the internals resource
+  events:
+    configuration-enabled: true # Enable/Disable events (and configurations)
+    prefix-with-application-name-enabled: true # Enable/Disable prefixing all metrics with the application name
+    statsd:
+      host: localhost
+      port: 8125
+    metric-writer-enabled: false # This can become very noisy, so disable it by default
+  jetty-server:
+    enabled: true # Enable the Jetty Server
+  error-endpoint:
+    enabled: true # Enable the base standard error endpoint and white-label API
+  logging:
+    access-log: 
+      enabled: true # Disable/Enable this feature
+      append-enabled: true # Append new logs
+      date-time-format: yyyy-MM-dd HH:mm:ss:SSS Z # The date and time format of the logs
+      extended-info-enabled: false # Logs more information about the request
+      postfix: -access-yyyy_mm_dd.log # The postfix to use for the file name (Note the log-file name is used above as prefix)
+      retention-days: 30 # The number of days to keep of the access-logs
+    name: ${spring.application.name} # The name of the log file (using the application name)
+    console-logging-enabled: true # Enable/Disable console logging
+    directory: logs # Directory to save to log files to (relative to the application - e.g. this is in the same dir)
+    max-rolling-file-history-in-days: 7 # Days of rolling files to keep
+    max-rolling-file-size: 50MB # Size of log files before they can roll
+    total-rolling-file-size-cap: 5GB # The total maximum of all rolling files
+    correlation-id-enabled: true # Log correlation-Ids to the log file
+  base-configuration-enabled: true
+  show-property-overrides-on-startup: true # Shows the properties that were override by services
+  unhandled-exception:
+    error-code: service_error # Default error code for exception responses
+    error-message: An unexpected error was encountered during the request # Default error message for exception responses
+  web-mvc.enabled: true # Enable all the WebMVC setup/configurations
+
+spring:
+  resources.add-mappings: true # Adds the default mappings for resources (static pages...etc)
+  application.name: eagle # Left intentionally blank for services to fill in
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ssZ # The default date format for json dates
+    joda-date-time-format: ${spring.jackson.date-format} # Like above
+    serialization.indent_output: true # Make the output pretty to read
+    serialization.write-dates-as-timestamps: false
+  mvc:
+    throw-exception-if-no-handler-found: true
+    view.suffix: .html # For view resolving defaults (append this to each "View" name from controllers)
+  metrics: # More info: http://docs.spring.io/config/docs/current/reference/html/production-ready-metrics.html
+    export.delay-millis: 5000 # How often to export metrics (using event system)
+
+# Below is the resource used for the raw data (also used by the swagger-ui)
+springfox.documentation.swagger.v2.path: ${eagle.config.internals-resource.name}/docs/data
+
+# Setting various logging settings
+logging:
+  level:
+    root: INFO # Default all root logging to INFO
+    com.eagle.boot: INFO # Explicitly set the framework to INFO also
+  file: ${eagle.config.logging.directory}/${eagle.config.logging.name}.log
+  #pattern.level: "%X{correlationId} %5p"
+
+management:
+  context-path: ${eagle.config.internals-resource.name} # Rename the "management" root path for services which will be our "internals" resource
+  add-application-context-header: false # Don't set the X-Application-Context header in responses - it leaks internal info
+
+# Control ALL actuator endpoints
+endpoints:
+  enabled: ${eagle.config.internals-resource.enabled}
+  actuator.path: /actuator

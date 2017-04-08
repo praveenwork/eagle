@@ -1,0 +1,5 @@
+#org.springsource.ide.eclipse.gradle.core.preferences.GradleProjectPreferences
+#Sat Apr 08 07:56:59 PDT 2017
+build.family.org.gradle.tooling.model.eclipse.HierarchicalEclipseProject=;eagle-contract;eagle-core;eagle-workflowengine;
+org.springsource.ide.eclipse.gradle.linkedresources=
+org.springsource.ide.eclipse.gradle.rootprojectloc=

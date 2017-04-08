@@ -1,0 +1,30 @@
+dependencies {
+	
+	compile('org.springframework.boot:spring-boot-starter-web') {
+        exclude(module: 'spring-boot-starter-tomcat') // Get out of here Tomcat (for now - will support in later versions)
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty") // Jetty!!
+    compile('org.springframework.boot:spring-boot-configuration-processor') // For configuration class with properties
+    compile('org.springframework.boot:spring-boot-starter-actuator') // For the actuator support/api's
+    compile("org.springframework.boot:spring-boot-starter-batch") // For Spring Batch
+    
+    compile('org.apache.commons:commons-lang3:3.4') // For the String utils mainly
+    compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310') // For Jackson data extensions
+     compile("com.fasterxml.jackson:jackson-bom:2.8.5")
+    compile("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.8.5")
+    
+    compile('io.springfox:springfox-swagger2:2.5.0') // API documentation
+    compile('io.springfox:springfox-bean-validators:2.5.0') // API documentation
+    compile('io.springfox:springfox-swagger-ui:2.5.0') // API documentation
+    
+    compile('org.codehaus.janino:janino:3.0.0') // To help with Logback XML property reading
+    compile('javax.el:javax.el-api:3.0.0') // To help with Logback XML property reading
+    
+    
+    compile("commons-io:commons-io:2.5") // this is only temporary while we return dummy data and will be removed soon
+    compile("javax.inject:javax.inject:1")
+   
+    //testCompile 'org.testng:testng:6.9.12'
+    testCompile 'org.easymock:easymock:3.4'
+    
+ }

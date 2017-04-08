@@ -14,13 +14,5 @@
       "exchnage":"SMART",
       "primaryExchange":"NASDAQ",
       "currency":"USD"
-   },
-   {  
-      "name":"Amazon.com Inc",
-      "type":"FUTURES",
-      "symbol":"ES",
-      "exchnage":"GLOBEX",
-      "primaryExchange":"GLOBEX",
-      "currency":"USD"
    }
 ]
