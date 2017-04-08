@@ -1,0 +1,78 @@
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'idea'
+    apply plugin: 'spring-boot'
+
+    // Need to set this after the java plugin above
+    sourceCompatibility = javaSourceCompatibility
+    targetCompatibility = javaTargetCompatibility
+
+    configurations {
+        sourcesJar
+    }
+
+    bootRepackage {
+        enabled = false // Don't repackage any of these modules since none are services, but are libraries
+    }
+
+    buildscript {
+        // Need to reference the repos below (there should only be one repo definition), but gradle complains like crazy
+        repositories {
+        	mavenLocal()
+            mavenCentral()
+        }
+    }
+    buildscript.repositories.each { repositories.add(it) }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourcesJar
+    }
+
+    test {
+
+        beforeTest { descriptor ->
+            logger.lifecycle("Running test: ${descriptor}")
+        }
+
+        afterTest { descriptor, result ->
+            logger.lifecycle("Executed test ${descriptor} with result: ${result.resultType}")
+        }
+
+        testLogging {
+            showStackTraces = true
+            exceptionFormat = "full"
+        }
+    }
+
+    jar {
+        manifest {
+            attributes(
+                    "Implementation-Title": "${projectDescription}",
+                    "Implementation-Version": version
+            )
+        }
+    }
+}
+
+buildscript {
+    // Gradle version does not yet allow build script references to projects without hacky workarounds
+    // For now, leaving the spring-boot gradle reference
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+buildscript.repositories.each { repositories.add(it) }
+
+
