@@ -1,5 +1,5 @@
 [  
-   {  
+  {  
       "name":"Cisco Systems Inc",
       "type":"STOCK",
       "symbol":"CSCO",
@@ -13,6 +13,21 @@
       "symbol":"AMZN",
       "exchnage":"SMART",
       "primaryExchange":"NASDAQ",
+      "currency":"USD"
+   },
+   {  
+      "name":"ES",
+      "type":"FUTURES",
+      "symbol":"ES",
+      "exchnage":"GLOBEX",
+      "currency":"USD",
+      "expiry":"20170616"
+   },
+   {  
+      "name":"SPX",
+      "type":"INDEX",
+      "symbol":"SPX",
+      "exchnage":"CBOE",
       "currency":"USD"
    }
 ]

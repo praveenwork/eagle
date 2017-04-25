@@ -1,5 +1,8 @@
 package com.eagle.workflow.engine.tws.data.providers;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +44,7 @@ public class EagleHistoricalDataProvider implements IHistoricalDataHandler{
 		extractDataJobRepository.updateStatus(this.instrument.getSymbol(), JobStatus.COMPLETED);
 		LOGGER.debug(historicalData.toString());
 		//Store Data in file
-		instrumentStoreService.store(historicalData);
+		instrumentStoreService.storeRawData(historicalData);
 	}
 
 	@Override
@@ -55,11 +58,13 @@ public class EagleHistoricalDataProvider implements IHistoricalDataHandler{
 		historicalData.setInstrument(instrument);
 		historicalData.setClose(bar.close());
 		historicalData.setCount(bar.count());
-		historicalData.setDate(bar.formattedTime());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+		historicalData.setDate(dateFormat.format(new Date(bar.time()* 1000)));
 		historicalData.setHigh(bar.high());
 		historicalData.setLow(bar.low());
 		historicalData.setOpen(bar.open());
 		historicalData.setVolume(bar.volume());
+		historicalData.setAdjClose(bar.close());
 		historicalData.setWap(bar.wap());
 		historicalData.setHasGaps(hasGap);
 		return historicalData;

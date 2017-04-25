@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.eagle.contract.model.CFDInstrument;
 import com.eagle.contract.model.ComboInstrument;
 import com.eagle.contract.model.ForexInstrument;
@@ -46,6 +48,10 @@ public class InstrumentRepositoryFactory {
 			instrument.setExchange((String) row.get("exchnage"));
 			instrument.setPrimaryExchange((String) row.get("primaryExchange"));
 			instrument.setSymbol((String) row.get("symbol"));
+			String expiry = (String) row.get("expiry");
+			if(StringUtils.isNoneBlank(expiry)){
+				instrument.setExpiry(expiry);
+			}
 			instrumentLists.add(instrument);
 			instrument = null;
 		}

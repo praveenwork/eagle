@@ -42,7 +42,7 @@ public class EagleTWSClient  implements BrokerService {
 	
 	//----------- Client calls--------
 	@Override
-	public void extractHistoricalData(Instrument instrument) throws EagleException {
+	public void extractHistoricalData(Instrument instrument, int duration) throws EagleException {
 		try {
 			LOGGER.debug("Requsting Historcial Data for Instrument: "+instrument.getSymbol());
 			
@@ -58,7 +58,7 @@ public class EagleTWSClient  implements BrokerService {
 			// Get the historical Data for Instrument.
 			EagleHistoricalDataProvider provider = new EagleHistoricalDataProvider(instrument,instrumentStoreService,extractDataJobRepository);
 			
-			eagleAPI.reqHistoricalData(contract, endDateTime, 1, DurationUnit.DAY,  BarSize._1_week, WhatToShow.TRADES, false, provider);
+			eagleAPI.reqHistoricalData(contract, endDateTime, duration, DurationUnit.DAY,  BarSize._1_day, WhatToShow.TRADES, false, provider);
 		} catch (EagleException e) {
 			throw e;
 		} catch (Exception e) {

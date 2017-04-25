@@ -16,9 +16,19 @@
       "sourceType": "com.eagle.workflow.engine.config.EagleEmailProperties"
     },
     {
+      "name": "eagle-workflow.enrichdata",
+      "type": "com.eagle.workflow.engine.config.EagleEnrichDataProperties",
+      "sourceType": "com.eagle.workflow.engine.config.EagleEnrichDataProperties"
+    },
+    {
       "name": "eagle-workflow.instrument",
       "type": "com.eagle.workflow.engine.config.InstrumentProperties",
       "sourceType": "com.eagle.workflow.engine.config.InstrumentProperties"
+    },
+    {
+      "name": "eagle-workflow.model",
+      "type": "com.eagle.workflow.engine.config.EagleModelProperties",
+      "sourceType": "com.eagle.workflow.engine.config.EagleModelProperties"
     }
   ],
   "properties": [
@@ -48,6 +58,11 @@
       "sourceType": "com.eagle.workflow.engine.config.EagleIBGatewayProperties"
     },
     {
+      "name": "eagle-workflow.eagle-home-directory",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
       "name": "eagle-workflow.email.from-email",
       "type": "java.lang.String",
       "sourceType": "com.eagle.workflow.engine.config.EagleEmailProperties"
@@ -73,6 +88,21 @@
       "sourceType": "com.eagle.workflow.engine.config.EagleEmailProperties"
     },
     {
+      "name": "eagle-workflow.enrich-data-directory",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
+      "name": "eagle-workflow.enrich-data-model-directory",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
+      "name": "eagle-workflow.enrichdata.enrich-app",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleEnrichDataProperties"
+    },
+    {
       "name": "eagle-workflow.instrument",
       "type": "com.eagle.workflow.engine.config.InstrumentProperties",
       "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
@@ -88,12 +118,37 @@
       "sourceType": "com.eagle.workflow.engine.config.InstrumentProperties"
     },
     {
-      "name": "eagle-workflow.instrument.store-data-directory",
+      "name": "eagle-workflow.model-data-directory",
       "type": "java.lang.String",
-      "sourceType": "com.eagle.workflow.engine.config.InstrumentProperties"
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
+      "name": "eagle-workflow.model.model-app-name",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleModelProperties"
+    },
+    {
+      "name": "eagle-workflow.model.pkl-file-path",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleModelProperties"
+    },
+    {
+      "name": "eagle-workflow.raw-data-directory",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
+      "name": "eagle-workflow.raw-data-file-type",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
     },
     {
       "name": "eagle-workflow.schedule",
+      "type": "java.lang.String",
+      "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
+    },
+    {
+      "name": "eagle-workflow.tools-directory",
       "type": "java.lang.String",
       "sourceType": "com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties"
     }

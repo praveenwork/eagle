@@ -1,7 +1,6 @@
 package com.eagle.workflow.engine.tws.util;
 
 import com.eagle.contract.model.Instrument;
-import com.ib.client.Contract;
 import com.ib.controller.NewContract;
 import com.ib.controller.Types.SecType;
 

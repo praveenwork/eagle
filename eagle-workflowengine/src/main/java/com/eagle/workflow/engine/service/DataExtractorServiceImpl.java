@@ -44,15 +44,11 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 			LOGGER.debug("Extracting service in progress ...");
 			List<Instrument> instrumentsList = instrumentRepository.getInstruments();
 			for (Instrument instrument : instrumentsList) {
-				eagleTWSClient.extractHistoricalData(instrument);
+				eagleTWSClient.extractHistoricalData(instrument, 9); 
 				extractDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
 			}
 			ListenableFuture<Boolean> jobStatusListen = extractDataJobRepository.isJobsDone();
 			LOGGER.debug("jobStatusListen is done?"+jobStatusListen.isDone());
-//			while (!jobStatusListen.isDone()) {
-//				LOGGER.debug("jobStatusListen is not done.. sleeping 2 sec");
-//				Thread.sleep(2);
-//			}
 			if(jobStatusListen.get()){
 				LOGGER.debug("jobStatusListen.get() true");
 				return true;

@@ -19,9 +19,6 @@ public class InstrumentProperties {
 	@NotBlank(message = "No Eagle workflow instrument inputFilePath property was provided ")
 	private String inputFilePath;
 	
-	@NotBlank(message = "No Eagle workflow instrument store Data Directory property was provided ")
-	private String storeDataDirectory;
-	
 	public Boolean getSelected() {
 		return selected;
 	}
@@ -36,13 +33,5 @@ public class InstrumentProperties {
 
 	public void setInputFilePath(String inputFilePath) {
 		this.inputFilePath = inputFilePath;
-	}
-
-	public String getStoreDataDirectory() {
-		return storeDataDirectory;
-	}
-
-	public void setStoreDataDirectory(String storeDataDirectory) {
-		this.storeDataDirectory = storeDataDirectory;
 	}
 }

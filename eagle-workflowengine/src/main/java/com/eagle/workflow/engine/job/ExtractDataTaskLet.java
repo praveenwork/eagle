@@ -30,7 +30,7 @@ public class ExtractDataTaskLet implements Tasklet {
 	 */
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		LOGGER.debug("In tasklet");
+		LOGGER.debug("ExtractData Tasklet step in progress..");
 		try {
 			dataExtractorService.extractData(); 
 		} catch (EagleException e) {
@@ -38,6 +38,7 @@ public class ExtractDataTaskLet implements Tasklet {
 		}  catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXTRACT_DATA, e.getMessage(),e);
 		}
+		LOGGER.debug("ExtractData Tasklet step completed");
 		return RepeatStatus.FINISHED;
 	}
 

@@ -24,6 +24,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 
+import com.eagle.workflow.engine.job.ApplyModelTaskLet;
 import com.eagle.workflow.engine.job.EnrichingDataTaskLet;
 import com.eagle.workflow.engine.job.ExtractDataTaskLet;
 import com.eagle.workflow.engine.job.JobCompletionNotificationListener;
@@ -52,6 +53,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 
 	private final EagleEmailProperties emailProperties;
 	
+	private final EagleModelProperties modelProperties;
+	
+	private final EagleEnrichDataProperties enrichDataProperties;
+	
+	
 	@Autowired
 	private EagleTWSConnectionProvider connectionProvider;
 
@@ -73,10 +79,13 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 
 	@Autowired
 	public EagleWorkFlowEngineConfiguration(@Valid EagleIBGatewayProperties gatewayProperties,
-			@Valid EagleWorkFlowEngineProperties engineProperties, @Valid EagleEmailProperties emailProperties) {
+			@Valid EagleWorkFlowEngineProperties engineProperties, @Valid EagleEmailProperties emailProperties,
+			@Valid EagleEnrichDataProperties enrichDataProperties, @Valid EagleModelProperties modelProperties) {
 		this.gatewayProperties = gatewayProperties;
 		this.engineProperties = engineProperties;
 		this.emailProperties  = emailProperties;
+		this.enrichDataProperties = enrichDataProperties;
+		this.modelProperties = modelProperties;
 	}
 
 	@Override
@@ -117,8 +126,10 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 		return jobBuilderFactory.get("extractDataJob")
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
+				//.flow(enrichingData())
 				.flow(extractData())
 				.next(enrichingData())
+				.next(applyModel())
 				.end()
 				.build();
 	}
@@ -134,13 +145,23 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 	}
 	
 	@Bean
+	public Step applyModel() {
+		return stepBuilderFactory.get("applyModel").tasklet(applyModelTaskLet()).build();
+	}
+	
+	@Bean
 	public Tasklet extractDataTaskLet() {
 		return new ExtractDataTaskLet();
 	}
 	
 	@Bean
 	public Tasklet enrichingDataTaskLet() {
-		return new EnrichingDataTaskLet();
+		return new EnrichingDataTaskLet(enrichDataProperties,engineProperties);
+	}
+	
+	@Bean
+	public Tasklet applyModelTaskLet() {
+		return new ApplyModelTaskLet(modelProperties,engineProperties);
 	}
 	
 }

@@ -8,5 +8,5 @@ import com.eagle.contract.model.InstrumentHistoricalData;
  */
 public interface InstrumentStoreService {
 	
-	public Boolean store(InstrumentHistoricalData historicalData);
+	public Boolean storeRawData(InstrumentHistoricalData historicalData);
 }

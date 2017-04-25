@@ -9,16 +9,27 @@ logging.level:
     
 eagle-workflow:
   schedule: 0 0 16 ? * MON-FRI
+  eagleHomeDirectory: //Users/ppasupuleti/Praveen/Projects/Anil/eagle_home
+  toolsDirectory: tools
+  rawDataDirectory: rawData
+  rawDataFileType: csv
+  enrichDataDirectory: enrichData
+  enrichDataModelDirectory: dataModel
+  modelDataDirectory: model
   email:
     smtpHost: smtp.gmail.com #SMTP Host
     smtpPort: 587 #SMTP port
     fromEmail: eagleworkflow@gmail.com
     password: PReset0123
-    toEmail: pgpasupuleti@gmail.com,pgpasupuleti@yahoo.com
+    toEmail: pgpasupuleti@gmail.com
   instrument:
     selected: true # false - for fetching all instruments (it is not avilable in current version), true- for selected instruments which are in instruments.json file
     inputFilePath: instruments/instruments.json
-    storeDataDirectory: //Users/ppasupuleti/Praveen/Projects/Anil/data/
+  enrichdata:
+    enrichApp: enrichData/run_all.py
+  model:
+    modelAppName: clientModelApply.py
+    pklFilePath: ess_predictive.pkl
   IBGateway:
     host: 127.0.0.1 # IB Gateway host
     port: 7496 # IB Gateway port
