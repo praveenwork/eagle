@@ -7,6 +7,6 @@ public interface BrokerService {
 	/**
 	 * @param instrument
 	 */
-	public void extractHistoricalData(Instrument instrument);
+	public void extractHistoricalData(Instrument instrument, int duration);
 	
 }

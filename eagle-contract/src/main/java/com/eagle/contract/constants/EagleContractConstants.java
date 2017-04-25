@@ -14,19 +14,23 @@ public class EagleContractConstants {
 	
 	public static final String INSTRUMENT_EXPIRY = "expiry";
 	
-	public static final String INSTRUMENT_HIGH = "high";
+	public static final String INSTRUMENT_HISTORICAL_ID = "ID";
 	
-	public static final String INSTRUMENT_LOW = "low";
+	public static final String INSTRUMENT_HISTORICAL_HIGH = "High";
 	
-	public static final String INSTRUMENT_OPEN = "open";
+	public static final String INSTRUMENT_HISTORICAL_LOW = "Low";
 	
-	public static final String INSTRUMENT_CLOSE = "close";
+	public static final String INSTRUMENT_HISTORICAL_OPEN = "Open";
+	
+	public static final String INSTRUMENT_HISTORICAL_CLOSE = "Close";
+	
+	public static final String INSTRUMENT_HISTORICAL_ADJCLOSE = "Adj Close";
 	
 	public static final String INSTRUMENT_WAP = "wap";
 
-	public static final String INSTRUMENT_DATE = "date";
+	public static final String INSTRUMENT_HISTORICAL_DATE = "Date";
 	
-	public static final String INSTRUMENT_VOLUME = "volume";
+	public static final String INSTRUMENT_HISTORICAL_VOLUME = "Volume";
 	
 	public static final String INSTRUMENT_COUNT = "count";
 	

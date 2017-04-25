@@ -15,9 +15,11 @@ public class FuturesInstrument extends Instrument {
 		return instrumentType;
 	}
     
+    
+    /*
     @Override
 	public String getExpiry() {
     	DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("YYYYMMdd");
-		return LocalDate.now().plusDays(10).format(dateFormat);
-	}
+		return LocalDate.now().plusDays(1).format(dateFormat); // expiry is 10 days
+	}*/
 }

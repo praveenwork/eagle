@@ -15,6 +15,12 @@ public class EagleError {
     public static final EagleError FAILED_TO_SEND_MAIL =
             new EagleError("'%s' failed to send email.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
+    public static final EagleError FAILED_TO_EXECUTE_PROCESS =
+            new EagleError("Failed execute the command: ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    
+    public static final EagleError FAILED_TO_EXECUTE_ENRICHDATA_STEP =
+            new EagleError("EnrichData step failed.''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
     private final String messageFormat;
     private final int httpResponseCode;

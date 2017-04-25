@@ -1,11 +1,6 @@
 package com.eagle.contract.model;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-
-import javax.swing.text.DateFormatter;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -27,27 +22,30 @@ public class InstrumentHistoricalData implements Serializable {
 	//@JsonProperty("Instrument")
 	private Instrument instrument;
 	
-	@JsonProperty(EagleContractConstants.INSTRUMENT_DATE)
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_ID)
+	private int id;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_DATE)
 	private String date;
 	
-	@JsonProperty(EagleContractConstants.INSTRUMENT_OPEN)
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_OPEN)
 	private double open;
 	
-	@JsonProperty(EagleContractConstants.INSTRUMENT_CLOSE)
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_CLOSE)
 	private double close;
 	
-	@JsonProperty(EagleContractConstants.INSTRUMENT_LOW)
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_LOW)
 	private double low;
 	
-	@JsonProperty(EagleContractConstants.INSTRUMENT_HIGH)
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_HIGH)
 	private double high;
 	
 	@JsonIgnore
 	//@JsonProperty(EagleContractConstants.INSTRUMENT_WAP)
 	private double wap;
 	
-	@JsonIgnore
-	//@JsonProperty(EagleContractConstants.INSTRUMENT_VOLUME)
+	//@JsonIgnore
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_VOLUME)
 	private long volume;
 	
 	@JsonIgnore
@@ -57,6 +55,9 @@ public class InstrumentHistoricalData implements Serializable {
 	@JsonIgnore
 	//@JsonProperty(EagleContractConstants.INSTRUMENT_HASGAPS)
 	private boolean hasGaps;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_ADJCLOSE)
+	private double adjClose;
 	
 	public InstrumentHistoricalData() {
 	}
@@ -127,9 +128,25 @@ public class InstrumentHistoricalData implements Serializable {
 		this.instrument = instrument;
 	}
 
+	public double getAdjClose() {
+		return adjClose;
+	}
+
+	public void setAdjClose(double adjClose) {
+		this.adjClose = adjClose;
+	}
+	
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	@Override
 	public String toString() {
-		return "InstrumentHistoricalData [instrument=" + instrument.getSymbol() + ", open=" + open + ", high=" + high + ", low="
+		return "InstrumentHistoricalData [instrument=" + instrument.getSymbol() + " id ="+id+", open=" + open + ", high=" + high + ", low="
 				+ low + ", close=" + close + ", wap=" + wap + ", date=" + date + ", volume=" + volume + ", count="
 				+ count + ", hasGaps=" + hasGaps + "]";
 	}
