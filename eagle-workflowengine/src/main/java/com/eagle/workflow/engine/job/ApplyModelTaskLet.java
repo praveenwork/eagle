@@ -1,8 +1,5 @@
 package com.eagle.workflow.engine.job;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -34,13 +31,7 @@ public class ApplyModelTaskLet implements Tasklet {
 
 	private static final String EMPTY_SPACE = " ";
 	
-	private static final String FINAL_ENRICH_DATA = "_final_";
-	
-	private static final String PREDICTIONS = "predictions_";
-	
 	private EagleModelProperties eagleModelProperties;
-	
-	private EagleWorkFlowEngineProperties engineProperties;
 	
 	@Autowired
 	private InstrumentRepository instrumentRepository;
@@ -62,7 +53,6 @@ public class ApplyModelTaskLet implements Tasklet {
 	
 	public ApplyModelTaskLet(EagleModelProperties eagleModelProperties, EagleWorkFlowEngineProperties engineProperties) {
 		this.eagleModelProperties = eagleModelProperties;
-		this.engineProperties = engineProperties;
 	}
 
 	/* (non-Javadoc)
@@ -111,14 +101,12 @@ public class ApplyModelTaskLet implements Tasklet {
 					command.append("--picklefile=").append(picklefile).append(EMPTY_SPACE);
 					command.append("--output=")
 							.append(modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX);
-
 					LOGGER.info("Apply Model Command:" + command);
-					
 					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
 					if (executeResult.isExecStatus()) {
 						LOGGER.info("Apply Model process command executed succesfully.");
 					} else {
-						LOGGER.error("pply Model process command execution failed. Reason:"+executeResult.getErrorMessage());
+						LOGGER.error("Apply Model process command execution failed. Reason:"+executeResult.getErrorMessage());
 					}
 					command = null;
 				}
@@ -126,7 +114,7 @@ public class ApplyModelTaskLet implements Tasklet {
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, e, e.getMessage());
 		}
-		LOGGER.debug("Enriching Data Tasklet Step completed");
+		LOGGER.debug("*** Apply Model Data Step completed ***");
 		return RepeatStatus.FINISHED;
 	}
 }
