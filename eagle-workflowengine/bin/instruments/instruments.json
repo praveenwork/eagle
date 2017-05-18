@@ -5,6 +5,9 @@
       "symbol":"ES",
       "exchnage":"GLOBEX",
       "currency":"USD",
-      "expiry":"20170616"
+      "expiry":"20170616",
+      "leverage_factor":1,
+      "prediction_value":1,
+      "price_limit":2082.00
    }
 ]

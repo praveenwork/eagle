@@ -28,6 +28,7 @@ import com.eagle.workflow.engine.job.ApplyModelTaskLet;
 import com.eagle.workflow.engine.job.EnrichingDataTaskLet;
 import com.eagle.workflow.engine.job.ExtractDataTaskLet;
 import com.eagle.workflow.engine.job.JobCompletionNotificationListener;
+import com.eagle.workflow.engine.job.PositionEngineTaskLet;
 import com.eagle.workflow.engine.repository.ExtractDataJobRepository;
 import com.eagle.workflow.engine.repository.InstrumentRepository;
 import com.eagle.workflow.engine.repository.InstrumentRepositoryFactory;
@@ -126,10 +127,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 		return jobBuilderFactory.get("extractDataJob")
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
-				//.flow(enrichingData())
-				.flow(extractData())
+				.flow(applyModel())
+				/*.flow(extractData())
 				.next(enrichingData())
 				.next(applyModel())
+				.next(positionEngine())*/
 				.end()
 				.build();
 	}
@@ -150,6 +152,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 	}
 	
 	@Bean
+	public Step positionEngine() {
+		return stepBuilderFactory.get("positionEngine").tasklet(positionEngineTaskLet()).build();
+	}
+	
+	@Bean
 	public Tasklet extractDataTaskLet() {
 		return new ExtractDataTaskLet();
 	}
@@ -162,6 +169,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 	@Bean
 	public Tasklet applyModelTaskLet() {
 		return new ApplyModelTaskLet(modelProperties,engineProperties);
+	}
+	
+	@Bean
+	public Tasklet positionEngineTaskLet() {
+		return new PositionEngineTaskLet(modelProperties,engineProperties);
 	}
 	
 }

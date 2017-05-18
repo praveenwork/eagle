@@ -31,15 +31,7 @@ import com.eagle.workflow.engine.utils.EagleProcessExecutorResult;
 public class EnrichingDataTaskLet implements Tasklet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(EnrichingDataTaskLet.class);
 
-	private static final String EMPTY_SPACE = " ";
-	
-	private static final String MODEL_DATA = "_model";
-	
-	private static final String FINAL_ENRICH_DATA = "_final_";
-	
 	private EagleEnrichDataProperties enrichDataProperties;
-	
-	private EagleWorkFlowEngineProperties engineProperties;
 	
 	@Autowired
 	private InstrumentRepository instrumentRepository;
@@ -50,51 +42,77 @@ public class EnrichingDataTaskLet implements Tasklet {
 	@Autowired
 	private EagleEngineFileUtils eagleEngineFileUtils;
 	
+	private static final String DATA_FILE_EXTENSION = ".csv";
+	
+	private static final String EMPTY_SPACE = " ";
+	
+	private static final String MODEL_DATA_SUFFIX = "_enrichModel.csv";
+	
+	private static final String ENRICH_DATA_SUFFIX = "_enrichData.csv";
+	
+	private static final String PYTHON_PATH = "/Users/ppasupuleti/anaconda/bin/python";
+	
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+	
 	public EnrichingDataTaskLet(EagleEnrichDataProperties enrichDataProperties, EagleWorkFlowEngineProperties engineProperties) {
 		this.enrichDataProperties = enrichDataProperties;
-		this.engineProperties = engineProperties;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.batch.core.step.tasklet.Tasklet#execute(org.springframework.batch.core.StepContribution, org.springframework.batch.core.scope.context.ChunkContext)
+	 * @see org.springframework.batch.core.step.tasklet.Tasklet#execute
+	 * (org.springframework.batch.core.StepContribution, org.springframework.batch.core.scope.context.ChunkContext)
+	 * 
+	 * Python Command: 
+	 * 			python run_all.py raw_data_ess.csv Final_Feature_ess.csv Final_f_0410.csv 12/30/2016 ess
+	 * 			raw_data_ess.csv 		: Current date rawData
+	 * 			Final_Feature_ess.csv 	: Fixed Model File (?)
+	 * 			Final_f_0410.csv		: 
+	 * 
+	 * 
+	 * ES_enrichdata.csv
+	 * AMZN_enrichdata.csv
+	 * 
+	 *
 	 */
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		LOGGER.debug("Enriching Data Tasklet Step in progress...");
+		LOGGER.debug("*** Enriching Data Step is in progress... ***");
 		try {
-			String enrichAppName = enrichDataProperties.getEnrichApp();
+			
 			String rawDataDirectory = eagleEngineFileUtils.getRawDataPath();
 			String enrichDataDirectory = eagleEngineFileUtils.getEnrichDataPath();
-			String enrichDataToolsDirectory = eagleEngineFileUtils.getToolDataPath();
-			String enrichDataModelDirectory = eagleEngineFileUtils.getEnrichDataModelPath();
+			String enrichDataModelDirectory = eagleEngineFileUtils.getEnrichModelPath();
 			
-			String rawDataFileType = engineProperties.getRawDataFileType();
+			// Tools
+			String enrichDataToolsDirectory = eagleEngineFileUtils.getToolDataPath();
+			String enrichAppName = enrichDataProperties.getEnrichApp();
 			
 			List<Instrument> instrumentsList = instrumentRepository.getInstruments();
 			
-			StringBuilder baseCommand = new StringBuilder("/Users/ppasupuleti/anaconda/bin/python");
+			StringBuilder baseCommand = new StringBuilder(PYTHON_PATH);
 			baseCommand.append(EMPTY_SPACE);
 			baseCommand.append(enrichDataToolsDirectory+enrichAppName).append(EMPTY_SPACE);
 			
 			StringBuilder command = null;
-			String rawInstrumentData =  null;
-			String modelDataFileName = null;
-			String finalEnrichDataFileName = null;
-			SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+			String rawFilePath =  null;
+			String modelFilePath = null;
+			String enrichDataFilePath = null;
 			String dateString = dateFormat.format(new Date());
-			dateFormat = new SimpleDateFormat("MMdd");
-			String dString = "0423";//dateFormat.format(new Date()); //FIXME
+			
 			for (Instrument instrument : instrumentsList) {
 				if("es".equalsIgnoreCase(instrument.getSymbol())){ //FIXME: delete this condition
 					command = new StringBuilder();
 					command.append(baseCommand).append(EMPTY_SPACE);
-					rawInstrumentData = rawDataDirectory + instrument.getSymbol() + "."+ rawDataFileType;
-					modelDataFileName = instrument.getSymbol()+ MODEL_DATA+"."+ rawDataFileType;
-					finalEnrichDataFileName = instrument.getSymbol()+ FINAL_ENRICH_DATA + dString + "."+ rawDataFileType;
-					command.append(rawInstrumentData).append(EMPTY_SPACE);
-					command.append(enrichDataModelDirectory+modelDataFileName).append(EMPTY_SPACE);
-					command.append(enrichDataDirectory+finalEnrichDataFileName).append(EMPTY_SPACE);
+					
+					rawFilePath = rawDataDirectory + instrument.getSymbol() + DATA_FILE_EXTENSION;
+					modelFilePath = enrichDataModelDirectory + instrument.getSymbol()+ MODEL_DATA_SUFFIX;
+					enrichDataFilePath = enrichDataDirectory + instrument.getSymbol()+ ENRICH_DATA_SUFFIX;
+					
+					command.append(rawFilePath).append(EMPTY_SPACE);
+					command.append(modelFilePath).append(EMPTY_SPACE);
+					command.append(enrichDataFilePath).append(EMPTY_SPACE);
 					command.append(dateString).append(EMPTY_SPACE);
+					
 					//command.append(instrument.getSymbol());
 					command.append("ess"); //FIXME: ??
 					LOGGER.info("Enrich Data Command:"+ command);
@@ -105,15 +123,15 @@ public class EnrichingDataTaskLet implements Tasklet {
 						LOGGER.error("Enrich Data process command execution failed. Reason:"+executeResult.getErrorMessage());
 					}
 					command = null;
-					rawInstrumentData =  null;
-					modelDataFileName = null;
-					finalEnrichDataFileName = null;
+					rawFilePath =  null;
+					modelFilePath = null;
+					enrichDataFilePath = null;
 				}
 			}
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, e, e.getMessage());
 		}
-		LOGGER.debug("Enriching Data Tasklet Step completed");
+		LOGGER.debug("*** Enriching Data Step completed ***");
 		return RepeatStatus.FINISHED;
 	}
 }

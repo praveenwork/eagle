@@ -1,10 +1,6 @@
 package com.eagle.workflow.engine.job;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -21,7 +17,6 @@ import org.springframework.stereotype.Component;
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
 import com.eagle.contract.model.Instrument;
-import com.eagle.workflow.engine.config.EagleEnrichDataProperties;
 import com.eagle.workflow.engine.config.EagleModelProperties;
 import com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties;
 import com.eagle.workflow.engine.repository.InstrumentRepository;
@@ -56,48 +51,69 @@ public class ApplyModelTaskLet implements Tasklet {
 	@Autowired
 	private EagleEngineFileUtils eagleEngineFileUtils;
 	
+	private static final String ENRICH_DATA_SUFFIX = "_enrichData.csv";
+	
+	private static final String PKL_FILE_SUFFIX = "_predictive.pkl";
+	
+	private static final String OUTPUT_FILE_SUFFIX = "_predictions.csv";
+	
+	private static final String PYTHON_PATH = "/Users/ppasupuleti/anaconda/bin/python";
+	
+	
 	public ApplyModelTaskLet(EagleModelProperties eagleModelProperties, EagleWorkFlowEngineProperties engineProperties) {
 		this.eagleModelProperties = eagleModelProperties;
 		this.engineProperties = engineProperties;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.batch.core.step.tasklet.Tasklet#execute(org.springframework.batch.core.StepContribution, org.springframework.batch.core.scope.context.ChunkContext)
+	 * @see org.springframework.batch.core.step.tasklet.Tasklet#execute
+	 * (org.springframework.batch.core.StepContribution, org.springframework.batch.core.scope.context.ChunkContext)
+	 * 
+	 * python command:
+	 * 		python clientModelApply.py --input=..\Data\es_testds_daily_16.csv --picklefile=..\Model\ess_predictive.pkl --output=..\Output\predictions_es_0410.csv
+	 * 		es_testds_daily_16 : latest enrichData
+	 * 		picklefile: static pkl file (?)
+	 * 		output: Prediction File		
+	 * 
 	 */
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		LOGGER.debug("Apply Model Data Tasklet Step in progress...");
+		LOGGER.debug("*** Apply Model Data Step in progress... ***");
 		try {
+			
+			String enrichDataDirectory = eagleEngineFileUtils.getEnrichDataPath();
+			String modelPKLDirectory = eagleEngineFileUtils.getModelPKLPath();
+			String modelOutputDirectory = eagleEngineFileUtils.getModelOutputPath();
+			
+			//Tools 
+			String modelDataToolCodeDirectory = eagleEngineFileUtils.getModelDataToolCodePath();
 			String modelAppName = eagleModelProperties.getModelAppName();
-			String modelDataToolsPath = eagleEngineFileUtils.getModelDataToolsPath();
-			String modelOutputFilePath = eagleEngineFileUtils.getModelOutputPath();
 			
-			String enrichDataPath = eagleEngineFileUtils.getEnrichDataPath();
-			String rawDataFileType = engineProperties.getRawDataFileType();
+			//Base python Command
+			StringBuilder baseCommand = new StringBuilder(PYTHON_PATH);
+			baseCommand.append(EMPTY_SPACE);
+			baseCommand.append(modelDataToolCodeDirectory+modelAppName);
 			
-			SimpleDateFormat dateFormat = new SimpleDateFormat("MMdd");
-			String dString = dateFormat.format(new Date());
-			
-			
-			StringBuilder baseCommand = new StringBuilder("/Users/ppasupuleti/anaconda/bin/python");
-			baseCommand.append(EMPTY_SPACE).append(modelDataToolsPath+"Code/"+modelAppName);
-
-			
+			// Iterate Instrument Repository and apply model for each instrument.
 			List<Instrument> instrumentsList = instrumentRepository.getInstruments();
 			StringBuilder command = null;
-			String finalEnrichDataFileName = null;
+			String enrichDataFilePath = null;
 			String picklefile = null;
 			for (Instrument instrument : instrumentsList) {
 				if ("es".equalsIgnoreCase(instrument.getSymbol())) { //FIXME: delete this condition
 					command = new StringBuilder();
 					command.append(baseCommand).append(EMPTY_SPACE);
-					finalEnrichDataFileName = enrichDataPath+instrument.getSymbol()+ FINAL_ENRICH_DATA + dString + "."+ rawDataFileType;
-					picklefile = modelDataToolsPath+"Model"+File.separator+eagleModelProperties.getPklFilePath();
-					command.append("--input=").append(finalEnrichDataFileName).append(EMPTY_SPACE);
+
+					enrichDataFilePath = enrichDataDirectory + instrument.getSymbol() + ENRICH_DATA_SUFFIX;
+					picklefile = modelPKLDirectory + instrument.getSymbol() + PKL_FILE_SUFFIX;
+
+					command.append("--input=").append(enrichDataFilePath).append(EMPTY_SPACE);
 					command.append("--picklefile=").append(picklefile).append(EMPTY_SPACE);
-					command.append("--output=").append(modelOutputFilePath+PREDICTIONS+instrument.getSymbol()+"_"+dString+"."+ rawDataFileType);
+					command.append("--output=")
+							.append(modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX);
+
+					LOGGER.info("Apply Model Command:" + command);
 					
-					LOGGER.info("Enrich Data Command:"+ command);
 					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
 					if (executeResult.isExecStatus()) {
 						LOGGER.info("Apply Model process command executed succesfully.");

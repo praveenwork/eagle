@@ -11,12 +11,11 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.eagle.contract.model.EmailRequest;
-
 import com.eagle.workflow.engine.service.EmailService;
-
-import org.springframework.stereotype.Component;
+import com.eagle.workflow.engine.store.EagleEngineDataProcessor;
 
 /**
  * @author ppasupuleti
@@ -29,6 +28,8 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 	@Autowired
 	private EmailService emailService;
 	
+	@Autowired
+	private EagleEngineDataProcessor dataProcessor;
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
 		String jobName = jobExecution.getJobInstance().getJobName() ;
@@ -54,7 +55,17 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 			emailSubject = format("Job: %s, job execution id: %d, job id: %d, succesfully completed status: %s",
 					jobName, jobExecution.getId(), jobExecution.getJobId(), jobExecution.getStartTime().toString(),
 					exceptionList.size(), exitStatus);
-			emailContent = emailSubject; //FIXME: provide the email content
+			if("extractDataJob".equalsIgnoreCase(jobName)){
+				emailContent = emailSubject; //FIXME: provide the email content
+			} else if("enrichingData".equalsIgnoreCase(jobName)){
+				emailContent = emailSubject; //FIXME: provide the email content
+			} else if("applyModel".equalsIgnoreCase(jobName)){
+				emailContent = emailSubject; //FIXME: provide the email content
+			} else if("positionEngine".equalsIgnoreCase(jobName)){
+				emailContent = emailSubject; //FIXME: provide the email content
+			} else {
+				emailContent = emailSubject; //FIXME: provide the email content
+			}
 			LOGGER.debug("Email Subject: "+emailSubject);
 			LOGGER.debug("Email Content: "+emailContent);
 			

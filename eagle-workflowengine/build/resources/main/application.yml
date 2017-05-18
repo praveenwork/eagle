@@ -29,7 +29,7 @@ eagle-workflow:
     enrichApp: enrichData/run_all.py
   model:
     modelAppName: clientModelApply.py
-    pklFilePath: clientmodel/ess_predictive.pkl
+    pklFilePath: ess_predictive.pkl
   IBGateway:
     host: 127.0.0.1 # IB Gateway host
     port: 7496 # IB Gateway port

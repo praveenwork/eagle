@@ -5,6 +5,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
 
@@ -44,6 +47,9 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 	
 	@Autowired
 	private EagleEngineFileUtils eagleEngineFileUtils;
+	
+	@Autowired
+	private EagleEngineDataProcessor<InstrumentHistoricalData> dataProcessor;
 
 	public InstrumentStoreServiceImpl(EagleWorkFlowEngineProperties engineProperties) {
 		this.engineProperties = engineProperties;
@@ -59,8 +65,6 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 			LOGGER.error("Nothing to save. historicalData is null");
 			return null;
 		}
-		
-		
 		String rawDataDirectory = eagleEngineFileUtils.getRawDataPath();
 		String rawDataFileType = engineProperties.getRawDataFileType();
 		
@@ -77,7 +81,8 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 		
 		if ("csv".equalsIgnoreCase(rawDataFileType)) {
 			// Store the data in csv file
-			storeStatus = storeInCSV(instrumentStorePath,historicalData);
+			//storeStatus = storeInCSV(instrumentStorePath,historicalData);
+			storeStatus = saveCsv(instrumentStorePath,historicalData);
 		} else {
 			// Store the data in excel file
 			storeStatus = storeInExcel(instrumentStorePath,historicalData);
@@ -86,6 +91,22 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 	}
 	
 	//---------Helpers--------
+	private Boolean saveCsv(String path, InstrumentHistoricalData historicalData){
+		Path inputPath = Paths.get(path);
+		if(Files.exists(inputPath)){
+			InstrumentHistoricalData lastHistoricalRecord = dataProcessor.getLastRecord(InstrumentHistoricalData.class, path);
+			if (lastHistoricalRecord != null) {
+				int lastRecordId = lastHistoricalRecord.getId();
+				historicalData.setId(lastRecordId+1);
+			} else {
+				historicalData.setId(1);
+			}
+		} else {
+			historicalData.setId(1);
+		}
+		return dataProcessor.writeData(path, historicalData);
+	}
+	
 	private  Boolean storeInCSV(String instrumentStorePath,InstrumentHistoricalData historicalData){
 		ICsvMapWriter mapWriter  = null;
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -102,6 +123,7 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 				headerIndex++;
 			}
 			if (instrumentStoreFile.exists()) { 
+				
 				mapWriter = new CsvMapWriter(new FileWriter(instrumentStorePath,true), CsvPreference.STANDARD_PREFERENCE);
 			} else {
 				mapWriter = new CsvMapWriter(new FileWriter(instrumentStorePath), CsvPreference.STANDARD_PREFERENCE);
