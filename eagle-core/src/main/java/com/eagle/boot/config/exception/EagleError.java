@@ -19,6 +19,18 @@ public class EagleError {
             new EagleError("Failed execute the command: ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
     
+    public static final EagleError INVALID_PATH =
+            new EagleError("Invalid file Path: ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError FAILD_TO_WRITE_DATA_INFILE =
+            new EagleError("Failed to write data in file : ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError FAILD_TO_READ_THE_LAST_RECORD =
+            new EagleError("Failed to read the last record from the file : ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError EMPTY_OBJECT =
+            new EagleError("No records found to write in file : ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
     public static final EagleError FAILED_TO_EXECUTE_ENRICHDATA_STEP =
             new EagleError("EnrichData step failed.''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     

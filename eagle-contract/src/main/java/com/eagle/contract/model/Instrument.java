@@ -30,9 +30,17 @@ public abstract class Instrument implements Serializable{
 	
 	@JsonProperty(EagleContractConstants.INSTRUMENT_EXPIRY)
 	private String expiry;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_LEVERAGE_FACTOR)
+	private int leverageFactor;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_PRICE_LIMIT)
+	private double priceLimit;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_PREDICTION_VALUE)
+	private int predictionValue;
 
 	public abstract InstrumentType getInstrumentType();
-	 
 	
 	public Instrument() {
 	}
@@ -78,11 +86,34 @@ public abstract class Instrument implements Serializable{
 		this.currency = currency;
 	}
 
-
 	public String getExpiry() {
 		return expiry;
 	}
 	public void setExpiry(String expiry) {
 		this.expiry = expiry;
+	}
+
+	public int getLeverageFactor() {
+		return leverageFactor;
+	}
+
+	public void setLeverageFactor(int leverageFactor) {
+		this.leverageFactor = leverageFactor;
+	}
+
+	public double getPriceLimit() {
+		return priceLimit;
+	}
+
+	public void setPriceLimit(double priceLimit) {
+		this.priceLimit = priceLimit;
+	}
+
+	public int getPredictionValue() {
+		return predictionValue;
+	}
+
+	public void setPredictionValue(int predictionValue) {
+		this.predictionValue = predictionValue;
 	}
 }

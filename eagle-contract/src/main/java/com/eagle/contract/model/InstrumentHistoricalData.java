@@ -4,6 +4,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.ParseDouble;
+import org.supercsv.cellprocessor.ParseInt;
+import org.supercsv.cellprocessor.ParseLong;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+
 import com.eagle.contract.constants.EagleContractConstants;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -12,11 +18,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class InstrumentHistoricalData implements Serializable {
+public class InstrumentHistoricalData extends StoreData implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+	private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	
 	@JsonIgnore
 	//@JsonProperty("Instrument")
@@ -44,7 +50,6 @@ public class InstrumentHistoricalData implements Serializable {
 	//@JsonProperty(EagleContractConstants.INSTRUMENT_WAP)
 	private double wap;
 	
-	//@JsonIgnore
 	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_VOLUME)
 	private long volume;
 	
@@ -146,8 +151,38 @@ public class InstrumentHistoricalData implements Serializable {
 
 	@Override
 	public String toString() {
-		return "InstrumentHistoricalData [instrument=" + instrument.getSymbol() + " id ="+id+", open=" + open + ", high=" + high + ", low="
-				+ low + ", close=" + close + ", wap=" + wap + ", date=" + date + ", volume=" + volume + ", count="
-				+ count + ", hasGaps=" + hasGaps + "]";
+		StringBuilder data = new StringBuilder("InstrumentHistoricalData [");
+		if(instrument!=null){
+			data.append("instrument=" + instrument.getSymbol());
+		}
+		data.append("id = "+id).append(",");
+		data.append("open = "+open).append(",");
+		data.append("high = "+high).append(",");
+		data.append("low = "+low).append(",");
+		data.append("close = "+close).append(",");
+		data.append("wap = "+wap).append(",");
+		data.append("date = "+date).append(",");
+		data.append("volume = "+volume).append(",");
+		data.append("count = "+count).append(",");
+		data.append("hasGaps = "+hasGaps);
+		data.append("]");
+		return data.toString();
 	}
+
+	@Override
+	@JsonIgnore
+	public CellProcessor[] getCellProcessor() {
+		final CellProcessor[] processors = new CellProcessor[] { 
+				new Optional(new ParseInt()), // ID
+        		new Optional(), // Date
+                new Optional(new ParseDouble()), // open
+                new Optional(new ParseDouble()), // high
+                new Optional(new ParseDouble()), // close
+                new Optional(new ParseDouble()), // low
+                new Optional(new ParseLong()), // volume
+                new Optional(new ParseDouble()), // AdjClose
+        };
+        return processors;
+	}
+	
 }
