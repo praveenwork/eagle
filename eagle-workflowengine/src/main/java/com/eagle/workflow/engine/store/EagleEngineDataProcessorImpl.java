@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.stereotype.Component;
+import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanReader;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvBeanReader;
@@ -20,9 +22,11 @@ import org.supercsv.prefs.CsvPreference;
 
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
+import com.eagle.contract.model.BaseInstrumentPredictionData;
 import com.eagle.contract.model.InstrumentHistoricalData;
 import com.eagle.contract.model.InstrumentPredictionData;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 /**
  * @author ppasupuleti
@@ -114,31 +118,96 @@ public class EagleEngineDataProcessorImpl<T> implements EagleEngineDataProcessor
 			}
 		}
 	}
-	
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public T getLastRecord(Class<T> clazz, String path, boolean customSection) {
+		if (!customSection) {
+			return getLastRecord(clazz, path);
+		}
+		ICsvBeanReader csvBeanReader = null;
+		try {
+			if (StringUtils.isEmpty(path)) {
+				throw new EagleException(EagleError.EMPTY_OBJECT, path);
+			}
+			Path inputPath = Paths.get(path);
+			if(!Files.exists(inputPath)){
+				throw new EagleException(EagleError.INVALID_PATH, path);
+			}
+			csvBeanReader = new CsvBeanReader(new FileReader(path),CsvPreference.STANDARD_PREFERENCE);
+			final String[] fileHeaders = csvBeanReader.getHeader(true);
+			String[] customHeader = new String[fileHeaders.length];
+			CellProcessor[] beanCustomerProcessors = CsvDataProcessor.getCellProcessor(clazz.getName());
+			CellProcessor[] customProcessors = new CellProcessor[fileHeaders.length];
+			ObjectMapper objectMapper = new ObjectMapper();
+			Map<String,Object> beanProperties = objectMapper.convertValue(clazz.newInstance(), Map.class);
+			for (int i = 0, j=0; i < fileHeaders.length; i++) {
+				if (beanProperties.get(fileHeaders[i]) != null) {
+					customHeader[i] = fileHeaders[i];
+					customProcessors[i] = beanCustomerProcessors[j];
+					j++;
+				} else {
+					customHeader[i] = null;
+					customProcessors[i] = null;
+				}
+			}
+			convertHeaderNameToBeanPropertyName(customHeader);
+			T data = null;
+			T result = null;
+			while((data  = (csvBeanReader.read(clazz, customHeader, customProcessors))) != null){	
+				result = data;
+				data = null;
+			} 
+			return result;
+		} catch (IOException e) {
+			throw new EagleException(EagleError.FAILD_TO_READ_THE_LAST_RECORD,path, e);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new EagleException(EagleError.FAILD_TO_READ_THE_LAST_RECORD,path, e.getMessage());
+		} finally{
+			if(csvBeanReader!=null){
+				try {
+					csvBeanReader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	//-------Helpers---------
 	private void convertHeaderNameToBeanPropertyName(String[] header){ 
 		for (int i=0;i<header.length;i++) {
-			header[i] = header[i].replaceAll(" ", "");
-			if(header[i].startsWith("1")){
-				header[i] = header[i].replaceFirst("1", "One");
-			} else if(header[i].startsWith("2")){
-				header[i] = header[i].replaceFirst("2", "Two");
-			} else if(header[i].startsWith("3")){
-				header[i] = header[i].replaceFirst("3", "Three");
-			} else if(header[i].startsWith("4")){
-				header[i] = header[i].replaceFirst("4", "Four");
-			} else if(header[i].startsWith("5")){
-				header[i] = header[i].replaceFirst("5", "Five");
+			if(header[i]!=null){
+				header[i] = header[i].replaceAll(" ", "");
+				if(header[i].startsWith("1")){
+					header[i] = header[i].replaceFirst("1", "One");
+				} else if(header[i].startsWith("2")){
+					header[i] = header[i].replaceFirst("2", "Two");
+				} else if(header[i].startsWith("3")){
+					header[i] = header[i].replaceFirst("3", "Three");
+				} else if(header[i].startsWith("4")){
+					header[i] = header[i].replaceFirst("4", "Four");
+				} else if(header[i].startsWith("5")){
+					header[i] = header[i].replaceFirst("5", "Five");
+				}
+				header[i] = WordUtils.capitalizeFully(header[i], new char[]{'_'}).replaceAll("_", "");
 			}
-			header[i] = WordUtils.capitalizeFully(header[i], new char[]{'_'}).replaceAll("_", "");
 		}
 	}
 	
 	//-------Remove following---------
-	public static void main(String[] args) {
+	public static void main1(String[] args) {
 		String historicalDataPath = "/Users/ppasupuleti/Praveen/Projects/Anil/test/test.csv";
-		String pridictionData = "/Users/ppasupuleti/Praveen/Projects/Anil/test/test2.csv";
+		String pridictionData = "/Users/ppasupuleti/Praveen/Projects/Anil/eagle_home/model/output/ES_predictions.csv";
 		
+		Map<String, String> headerMap = new HashMap();
+		headerMap.put("nextdret_predicted", "nextdretPredicted");
+		headerMap.put("nextdret_predicted_labels", "nextdretPredictedLabels");
+		headerMap.put("nextdret_relative_probability", "nextdretRelativeProbability");
+		
+		
+		/*
 		// Instrument HistoricalData
 		EagleEngineDataProcessor<InstrumentHistoricalData> processor = new EagleEngineDataProcessorImpl<>();
 		//writing InstrumentHistoricalData
@@ -146,13 +215,13 @@ public class EagleEngineDataProcessorImpl<T> implements EagleEngineDataProcessor
 		//Reading Last Historical Data record
 		InstrumentHistoricalData instrumentHistoricalData = processor.getLastRecord(InstrumentHistoricalData.class, historicalDataPath);
 		System.out.println(instrumentHistoricalData.toString());
-		
+		*/
 		//Instrument Prediction Data
 		EagleEngineDataProcessor<InstrumentPredictionData> predictionProcessor = new EagleEngineDataProcessorImpl<>();
 		//Writing Instrument Prediction Data
-		predictionProcessor.writeData(pridictionData, getInstrumentPredictionData());
+		//predictionProcessor.writeData(pridictionData, getInstrumentPredictionData());
 		//Reading Instrument Prediction Data
-		InstrumentPredictionData instrumentPredictionData = predictionProcessor.getLastRecord(InstrumentPredictionData.class, pridictionData);
+		InstrumentPredictionData instrumentPredictionData = predictionProcessor.getLastRecord(InstrumentPredictionData.class, pridictionData,true);
 		System.out.println(instrumentPredictionData.toString());
 	}                                                                                                     
 	
@@ -171,8 +240,8 @@ public class EagleEngineDataProcessorImpl<T> implements EagleEngineDataProcessor
 		instrumentHistoricalData.setWap(0.6);
 		return instrumentHistoricalData;
 	}
-	private static InstrumentPredictionData getInstrumentPredictionData(){
-		InstrumentPredictionData instrumentPredictionData = new InstrumentPredictionData();
+	private static BaseInstrumentPredictionData getInstrumentPredictionData(){
+		BaseInstrumentPredictionData instrumentPredictionData = new BaseInstrumentPredictionData();
 		instrumentPredictionData.setCci3(0.1);
 		instrumentPredictionData.setCci5(0.5);
 		instrumentPredictionData.setClose(0.1);

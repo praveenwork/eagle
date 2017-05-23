@@ -16,6 +16,8 @@ public class EagleTWSConnectionProvider implements IConnectionHandler {
 	
 	private static boolean connected;
 	
+	private ArrayList<String> mAccountList = null;
+	
 	public EagleTWSConnectionProvider(){
 		LOGGER.info("in EagleTWSConnectionProvider");
 	}
@@ -28,10 +30,14 @@ public class EagleTWSConnectionProvider implements IConnectionHandler {
 	 * @see com.ib.controller.ApiController.IConnectionHandler#accountList(java.util.ArrayList)
 	 */
 	@Override
-	public void accountList(ArrayList<String> arg0) {
-		LOGGER.info("in accountList");
+	public void accountList(ArrayList<String> accountList) {
+		mAccountList = accountList;
 	}
 
+	public ArrayList<String> getAccountList() {
+		return mAccountList;
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.ib.controller.ApiController.IConnectionHandler#connected()
 	 */

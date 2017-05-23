@@ -27,6 +27,7 @@ eagle-workflow:
     inputFilePath: instruments/instruments.json
   enrichdata:
     enrichApp: enrichData/run_all.py
+    configPath: enrichData/config.ini
   model:
     modelAppName: clientModelApply.py
     pklFilePath: ess_predictive.pkl

@@ -3,6 +3,7 @@ package com.eagle.workflow.engine.tws.client;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,10 @@ import com.eagle.boot.config.exception.EagleException;
 import com.eagle.contract.model.Instrument;
 import com.eagle.contract.service.BrokerService;
 import com.eagle.workflow.engine.repository.ExtractDataJobRepository;
+import com.eagle.workflow.engine.repository.PositionDataJobRepository;
 import com.eagle.workflow.engine.store.InstrumentStoreService;
 import com.eagle.workflow.engine.tws.api.EagleAPI;
+import com.eagle.workflow.engine.tws.data.providers.EagleAccountDataProvider;
 import com.eagle.workflow.engine.tws.data.providers.EagleHistoricalDataProvider;
 import com.eagle.workflow.engine.tws.util.NewContractFactory;
 import com.ib.controller.NewContract;
@@ -33,6 +36,9 @@ public class EagleTWSClient  implements BrokerService {
 	
 	@Autowired
 	private ExtractDataJobRepository extractDataJobRepository;
+	
+	@Autowired
+	private PositionDataJobRepository positionDataJobRepository;
 	
 	@Autowired
 	private InstrumentStoreService instrumentStoreService;
@@ -63,6 +69,41 @@ public class EagleTWSClient  implements BrokerService {
 			throw e;
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXTRACT_DATA, e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public List<String> getAccounts() {
+		try {
+			LOGGER.debug("Requsting Getting Accounts: ");
+			//Check the IB connection
+			eagleAPI.checkAndConnect();
+			return eagleAPI.getAccounts();
+		} catch (EagleException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new EagleException(EagleError.FAILED_TO_GET_ACCOUNTS,"", e);
+		}	
+	}
+
+	@Override
+	public void getPortifolioPosition(Instrument instrument, String accountCode) {
+		try {
+			LOGGER.debug("Requsting Portifolio Positionfor Instrument: "+instrument.getSymbol());
+			
+			// build new Contract
+			NewContract contract = NewContractFactory.getNewContract(instrument);
+			EagleAccountDataProvider accountDataProvider = new EagleAccountDataProvider(instrument,positionDataJobRepository);
+			eagleAPI.reqAccountUpdates(true, accountCode, accountDataProvider);
+			LOGGER.debug("Requested to IB");		
+		} catch (EagleException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new EagleException(EagleError.FAILED_TO_GET_INSTRUMENT_POSITION, instrument.getSymbol(), e);
 		}
 	}
 }

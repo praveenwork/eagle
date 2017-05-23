@@ -1,5 +1,7 @@
 package com.eagle.workflow.engine.tws.api;
 
+import java.util.ArrayList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +83,17 @@ public class EagleAPI extends ApiController{
 				LOGGER.debug("TWS connection lost. Trying to reconnect TWS.. ");
 				this.connect(eagleAPIConnection.getHost(), eagleAPIConnection.getPort(), eagleAPIConnection.getClientId());
 			}
+		} catch (EagleException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new EagleException(EagleError.FAILED_TO_CONNECT_TWS, e.getMessage(),e);
+		}
+	}
+	
+	public ArrayList<String> getAccounts(){
+		try {
+			checkAndConnect();
+			return this.connectionProvider.getAccountList();
 		} catch (EagleException e) {
 			throw e;
 		} catch (Exception e) {

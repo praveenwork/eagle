@@ -29,8 +29,6 @@ import com.eagle.workflow.engine.utils.EagleProcessExecutorResult;
 public class ApplyModelTaskLet implements Tasklet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ApplyModelTaskLet.class);
 
-	private static final String EMPTY_SPACE = " ";
-	
 	private EagleModelProperties eagleModelProperties;
 	
 	@Autowired
@@ -49,6 +47,8 @@ public class ApplyModelTaskLet implements Tasklet {
 	private static final String OUTPUT_FILE_SUFFIX = "_predictions.csv";
 	
 	private static final String PYTHON_PATH = "/Users/ppasupuleti/anaconda/bin/python";
+	
+	private static final String EMPTY_SPACE = " ";
 	
 	
 	public ApplyModelTaskLet(EagleModelProperties eagleModelProperties, EagleWorkFlowEngineProperties engineProperties) {

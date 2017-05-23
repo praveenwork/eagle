@@ -19,11 +19,22 @@ public class EagleEnrichDataProperties {
 	@NotBlank(message = "No Eagle workflow enrichApp property was provided ")
 	private String enrichApp;
 
+	@NotBlank(message = "No Eagle workflow configPath property was provided ")
+	private String configPath;
+	
 	public String getEnrichApp() {
 		return enrichApp;
 	}
 
 	public void setEnrichApp(String enrichApp) {
 		this.enrichApp = enrichApp;
+	}
+
+	public String getConfigPath() {
+		return configPath;
+	}
+
+	public void setConfigPath(String configPath) {
+		this.configPath = configPath;
 	}
 }

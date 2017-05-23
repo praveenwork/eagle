@@ -32,6 +32,7 @@ import com.eagle.workflow.engine.job.PositionEngineTaskLet;
 import com.eagle.workflow.engine.repository.ExtractDataJobRepository;
 import com.eagle.workflow.engine.repository.InstrumentRepository;
 import com.eagle.workflow.engine.repository.InstrumentRepositoryFactory;
+import com.eagle.workflow.engine.repository.PositionDataJobRepository;
 import com.eagle.workflow.engine.service.EmailServiceImpl;
 import com.eagle.workflow.engine.store.InstrumentStoreService;
 import com.eagle.workflow.engine.store.InstrumentStoreServiceImpl;
@@ -77,6 +78,8 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 	private InstrumentRepositoryFactory instrumentRepositoryFactory = new InstrumentRepositoryFactory();
 	
 	private ExtractDataJobRepository extractDataJobRepository = new ExtractDataJobRepository();
+	
+	private PositionDataJobRepository positionDataRepository = new PositionDataJobRepository();
 
 	@Autowired
 	public EagleWorkFlowEngineConfiguration(@Valid EagleIBGatewayProperties gatewayProperties,
@@ -127,11 +130,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 		return jobBuilderFactory.get("extractDataJob")
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
-				.flow(applyModel())
-				/*.flow(extractData())
+				//.flow(positionEngine())
+				.flow(extractData())
 				.next(enrichingData())
 				.next(applyModel())
-				.next(positionEngine())*/
+				.next(positionEngine())
 				.end()
 				.build();
 	}

@@ -83,9 +83,11 @@ public class EnrichingDataTaskLet implements Tasklet {
 			String enrichDataDirectory = eagleEngineFileUtils.getEnrichDataPath();
 			String enrichDataModelDirectory = eagleEngineFileUtils.getEnrichModelPath();
 			
+			
 			// Tools
 			String enrichDataToolsDirectory = eagleEngineFileUtils.getToolDataPath();
 			String enrichAppName = enrichDataProperties.getEnrichApp();
+			String configPath = enrichDataProperties.getConfigPath();
 			
 			List<Instrument> instrumentsList = instrumentRepository.getInstruments();
 			
@@ -95,7 +97,7 @@ public class EnrichingDataTaskLet implements Tasklet {
 			
 			StringBuilder command = null;
 			String rawFilePath =  null;
-			String modelFilePath = null;
+			String enrichModelFilePath = null;
 			String enrichDataFilePath = null;
 			String dateString = dateFormat.format(new Date());
 			
@@ -105,16 +107,17 @@ public class EnrichingDataTaskLet implements Tasklet {
 					command.append(baseCommand).append(EMPTY_SPACE);
 					
 					rawFilePath = rawDataDirectory + instrument.getSymbol() + DATA_FILE_EXTENSION;
-					modelFilePath = enrichDataModelDirectory + instrument.getSymbol()+ MODEL_DATA_SUFFIX;
+					enrichModelFilePath = enrichDataModelDirectory + instrument.getSymbol()+ MODEL_DATA_SUFFIX;
 					enrichDataFilePath = enrichDataDirectory + instrument.getSymbol()+ ENRICH_DATA_SUFFIX;
 					
 					command.append(rawFilePath).append(EMPTY_SPACE);
-					command.append(modelFilePath).append(EMPTY_SPACE);
+					command.append(enrichModelFilePath).append(EMPTY_SPACE);
 					command.append(enrichDataFilePath).append(EMPTY_SPACE);
 					command.append(dateString).append(EMPTY_SPACE);
 					
-					//command.append(instrument.getSymbol());
-					command.append("ess"); //FIXME: ??
+					//command.append(instrument.getSymbol()).append(EMPTY_SPACE);
+					command.append("ess").append(EMPTY_SPACE); //FIXME: ??
+					command.append(enrichDataToolsDirectory+configPath);
 					LOGGER.info("Enrich Data Command:"+ command);
 					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
 					if (executeResult.isExecStatus()) {
@@ -124,7 +127,7 @@ public class EnrichingDataTaskLet implements Tasklet {
 					}
 					command = null;
 					rawFilePath =  null;
-					modelFilePath = null;
+					enrichModelFilePath = null;
 					enrichDataFilePath = null;
 				}
 			}

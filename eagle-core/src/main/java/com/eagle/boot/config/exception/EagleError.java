@@ -9,8 +9,17 @@ public class EagleError {
     public static final EagleError FAILED_TO_EXTRACT_DATA =
             new EagleError("'%s' Failed to extract Data .", HttpStatus.BAD_REQUEST.value());
     
+    public static final EagleError FAILED_TO_GET_INSTRUMENT_POSITION =
+            new EagleError("Failed to get position for instrument  :''%s'' .", HttpStatus.BAD_REQUEST.value());
+    
     public static final EagleError FAILED_TO_CONNECT_TWS =
             new EagleError("'%s' failed to connect TWS server.", HttpStatus.BAD_REQUEST.value());
+    
+    public static final EagleError FAILED_TO_GET_ACCOUNTS =
+            new EagleError("'%s' failed to get accounts TWS server.", HttpStatus.BAD_REQUEST.value());
+    
+    public static final EagleError FAILED_TO_GET_POSITION =
+            new EagleError("Failed to get postion for instrument : ''%S'' , Reason: ''%S''.", HttpStatus.BAD_REQUEST.value());
     
     public static final EagleError FAILED_TO_SEND_MAIL =
             new EagleError("'%s' failed to send email.", HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -33,6 +42,8 @@ public class EagleError {
     
     public static final EagleError FAILED_TO_EXECUTE_ENRICHDATA_STEP =
             new EagleError("EnrichData step failed.''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError NO_PREDICTION_DATA = new EagleError("No prediction data from the path ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
     private final String messageFormat;
     private final int httpResponseCode;

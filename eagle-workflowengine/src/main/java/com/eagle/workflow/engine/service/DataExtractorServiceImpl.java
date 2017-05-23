@@ -1,5 +1,7 @@
 package com.eagle.workflow.engine.service;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -66,14 +68,19 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 			for (Instrument instrument : instrumentsList) {
 				int duration = 9;
 				String instrumentStorePath = classpathResource.getPath() + instrument.getSymbol() + ".csv";
-				//Fetch the last historical Record from the instrument store file.
-				InstrumentHistoricalData latestHistoricalData = dataProcessor.getLastRecord(InstrumentHistoricalData.class, instrumentStorePath);
-				if (latestHistoricalData != null) {
-					duration = historicalDataDuration(LocalDate.parse(latestHistoricalData.getDate(), dateFormatter));
-				} else {
-					LOGGER.info("No historical data found for instrument : ["+instrument.getSymbol()+"] , hence setting dufault duration : "+DEFAULT_DURATION);
+				if(Files.exists(Paths.get(instrumentStorePath))){
+					//Fetch the last historical Record from the instrument store file.
+					InstrumentHistoricalData latestHistoricalData = dataProcessor.getLastRecord(InstrumentHistoricalData.class, instrumentStorePath);
+					if (latestHistoricalData != null) {
+						duration = historicalDataDuration(LocalDate.parse(latestHistoricalData.getDate(), dateFormatter));
+					} else {
+						LOGGER.info("No historical data found for instrument : ["+instrument.getSymbol()+"] , hence setting dufault duration : "+DEFAULT_DURATION);
+						duration = DEFAULT_DURATION;
+					}
+				} else{
 					duration = DEFAULT_DURATION;
 				}
+				
 				if (duration <= 0) {
 					LOGGER.info("Today's data already extracted for instrument:"+instrument.getSymbol());
 				} else {
@@ -105,7 +112,7 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 		int days = (int) ChronoUnit.DAYS.between(lastRecordDate.plusDays(addDays), today);
 		duration = days - (weeks * 2);
 		// if the lastRecordDate is a Friday and
-		if ((days % weeks != 0) && (lastRecordDate.getDayOfWeek() == DayOfWeek.FRIDAY)) {
+		if ((weeks != 0) && (days % weeks != 0) && (lastRecordDate.getDayOfWeek() == DayOfWeek.FRIDAY)) {
 			duration = duration - 2;
 		}
 		if (duration > MAX_IB_SUPPORTED_HISTORICAL_DAYS) {
