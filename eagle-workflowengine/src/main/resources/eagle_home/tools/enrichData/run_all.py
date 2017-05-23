@@ -13,7 +13,7 @@ def main(config):
     print("Loading feature file.!")
     # old inputData features
     try:
-        features = pd.read_csv(sys.argv[2])
+        features = pd.read_csv(sys.argv[2], delimiter=',')
     except:
         print("File does not exist : "+sys.argv[2])
         sys.exit(0)
@@ -48,11 +48,14 @@ def main(config):
     
     f = Features(features, n, bin_ranges, bin_names, config)
     featureList = []
-    if(sys.argv[5] == "ess"):
+    if(sys.argv[5] == "es"):
         featureList = [ 
                        data.ix[start+1:end],  
+                       f.closeByFeatures(interim, "High"),
+                       f.closeByFeatures(interim, "Low"),
                        f.getCCFeatures(interim, 3),
-                       f.getCCFeatures(interim, 5), 
+                       f.getCCFeatures(interim, 5),
+                       f.getStcFeaturesFastMove(interim,7,3),
                        f.getStcFeatures(interim, 7),
                        f.getStcFeatures(interim, 3), 
                        f.getRSISmoothedFeatures(interim, 3), 
@@ -87,7 +90,7 @@ def main(config):
                        f.getMcdFeaturesTny(interim, 9, 3)
                        ] 
     else:
-        print("Unknown format.Please provide ess or tny")
+        print("Unknown format.Please provide es or tny")
         sys.exit(0)
     print("Feature calculation Finished.!")
      
@@ -96,25 +99,28 @@ def main(config):
     
     global cols
     # Columns format used to write output file
-    if(sys.argv[5] == "ess"):
-        cols = ['ID', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close', 'TPV',
-                'SMA_TPV(3)', 'MAD(3)', 'CCI_3', 'SMA_TPV(5)', 'MAD(5)', 'CCI_5', 'CCI_5_SIGNAL',
-                'Slow(5)', 'Fast(3)', 'macd(5,3,1)', 'SigLine(2)', 'macd(5,3,2)', 'UP', 'DOWN',
-                'UP_AVG_3', 'DOWN_AVG_3', 'Relative_S_3', 'RSI_3', 'RSI_3_CATEGORY', 'STOC_3_LOW',
-                'STOC_3_MIN_MAX', 'STOC_3_K', 'STOC_3_K_CAT', 'STOC_7_LOW', 'STOC_7_MIN_MAX',
+    if(sys.argv[5] == "es"):
+        cols = ['ID', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close', 'Clo_by_High_min95',
+                'Close_by_Low_min95','TPV', 'SMA_TPV(3)', 'MAD(3)', 'CCI_3', 'SMA_TPV(5)', 'MAD(5)', 
+                'CCI_5', 'CCI_5_SIGNAL', 'Slow(5)', 'Fast(3)', 'macd_5_3_1', 'SigLine(2)', 'macd_5_3_2',
+                'UP', 'DOWN', 'UP_AVG_3', 'DOWN_AVG_3', 'Relative_S_3', 'RSI_3', 'RSI_3_Category', 'STOC_3_LOW',
+                'STOC_3_MIN_MAX', 'STOC_3_K', 'STOCK_3_K_CAT', 'STOC_7_LOW', 'STOC_7_MIN_MAX',
                 'STOC_7_K', 'STOC_7_percD', 'STOC_7_K-D', '1D_r', '1D_r_cat', '2D_r', '2D_r_cat',
                 '3D_r', '3D_r_cat', '5D_r', '5D_r_cat']
     elif(sys.argv[5] == "tny"):
         cols = ['ID','Date','Open','High','Low','Close','TPV','SMA_TPV(3)','MAD(3)','CCI_3',
                 'SMA_TPV(5)','MAD(5)','CCI_5','SMA_TPV(9)', 'MAD(9)', 'CCI_9','momentum_3',
-                'momentum_5','momentum_7','momentum_9','STOC_3_LOW','STOC_RANGE_3', 'STOC_3_K',
-                'STOC_5_LOW','STOC_RANGE_5', 'STOC_5_K','STOC_7_LOW','STOC_RANGE_7','STOC_7_K',
-                'UP','DOWN','UP_AVG_3','DOWN_AVG_3','Relative_S_3','RSI_3','UP_AVG_5',
-                'DOWN_AVG_5','Relative_S_5','RSI_5','UP_AVG_7','DOWN_AVG_7','Relative_S_7',
-                'RSI_7','Slow(9)','Slow(7)','Slow(5)','Fast(3)','macd(5,3)','macd(7,3)','macd(7,5)',
-                'macd(9,3)','1D_r','2D_r']
+                'momentum_5','momentum_7','momentum_9','STOC_3_LOW','STOC_RANGE_3', 'sto_3',
+                'STOC_5_LOW','STOC_RANGE_5', 'sto_5','STOC_7_LOW','STOC_RANGE_7','sto_7',
+                'UP','DOWN','UP_AVG_3','DOWN_AVG_3','Relative_S_3','rsi_3','UP_AVG_5',
+                'DOWN_AVG_5','Relative_S_5','rsi_5','UP_AVG_7','DOWN_AVG_7','Relative_S_7',
+                'rsi_7','Slow(9)','Slow(7)','Slow(5)','Fast(3)','macd_5_3','macd_7_3','macd_7_5',
+                'macd_9_3','1D_r','2D_r']
+
 
     print("Writing Output File.!")
+    print "All Columns:", features.columns
+    
     features[cols].append(final[cols], ignore_index=True).to_csv(sys.argv[3], index=False)
 
 
@@ -130,15 +136,17 @@ if __name__ == "__main__":
         print("""\
 This script will produce the features for stock prediction.
 
-Usage: python run_all.py inputDatacsvfile inputDatafeaturefile outputfilename date (ess or tny)
+Usage: python run_all.py inputDatacsvfile inputDatafeaturefile outputfilename date (es or tny)
 help : Date format - MM/DD/YYYY
             """)
         sys.exit(0)
 
     print("Started.!")  
     config = configparser.ConfigParser()
-    config.read('/Users/ppasupuleti/Praveen/Projects/Anil/eagle_home/tools/enrichData/utils/config.ini')
+    #config.read('C:\Users\akny2\Dropbox\SBV\Ops0518\utils\config.ini')
+    config.read(sys.argv[6])
     
+    print "Configutation:", config.sections()
         
     main(config)
     print("Feature Generation Complete.!")

@@ -41,13 +41,13 @@ class Features:
             
             #macd = Fast - Slow
             mcd_type = fast - slow
-            mcd.set_value(i, 'macd(' + str(type1) + ',' + str(type2) + ',' + str(type3) + ')', mcd_type)
+            mcd.set_value(i, 'macd_' + str(type1) + '_' + str(type2) + '_' + str(type3), mcd_type)
             
             if(type3 == 2):
                 #signal = (macd - signal(-1))*0.67+signal(-1)
                 signal = (mcd_type - tempFeatures.ix[i - 1]['SigLine(' + str(type3) + ')']) * 0.67 + tempFeatures.ix[i - 1]['SigLine(' + str(type3) + ')']
                 mcd.set_value(i, 'SigLine(' + str(type3) + ')', signal)
-                mcd.set_value(i, 'macd(' + str(type1) + ',' + str(type2) + ',' + str(type3) + ')', mcd_type - signal)
+                mcd.set_value(i, 'macd_' + str(type1) + '_' + str(type2) + '_' + str(type3), mcd_type - signal)
             
             tempFeatures = pd.concat([tempFeatures,mcd])
             
@@ -74,10 +74,10 @@ class Features:
             
             if(indicator2 == 3):
                 mcd_type = (fast - slow)*100
-                mcd.set_value(i, 'macd(' + str(indicator1) + ',' + str(indicator2) + ')', mcd_type)
+                mcd.set_value(i, 'macd_' + str(indicator1) + '_' + str(indicator2), mcd_type)
             else:
                 mcd_type = (slow1 - slow)*100
-                mcd.set_value(i, 'macd(' + str(indicator1) + ',' + str(indicator2) + ')', mcd_type)
+                mcd.set_value(i, 'macd_' + str(indicator1) + '_' + str(indicator2), mcd_type)
             
         return mcd
     
@@ -116,9 +116,36 @@ class Features:
             tempFeatures = tempFeatures.append(stc,ignore_index=True)
         bin_names = self.getlist(self.config['STOC_BINS'].get("bin_names"), str)
         bin_ranges = self.getlist(self.config['STOC_BINS'].get("bin_ranges"), float)
-        stc['STOC_' + str(typeIndicator) + '_K_CAT'] = pd.cut(stc['STOC_' + str(typeIndicator) + '_K'].values, bin_ranges, labels=bin_names, include_lowest=True)
+        stc['STOCK_' + str(typeIndicator) + '_K_CAT'] = pd.cut(stc['STOC_' + str(typeIndicator) + '_K'].values, bin_ranges, labels=bin_names, include_lowest=True)
             
         return stc
+    
+    def getStcFeaturesFastMove(self, inputData, typeIndicator, fastMove1):
+        stc = pd.DataFrame()
+        iteration = inputData['ID'].values
+        tempFeatures = self.features
+        for i in iteration[-self.n:]:
+            stoc_low = inputData.ix[i]['Close'] - min(inputData.ix[i - typeIndicator + 1:i]['Low'])
+            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_LOW', stoc_low)
+            
+            stoc_min_max = max(inputData.ix[i - typeIndicator + 1:i]['High']) - min(inputData.ix[i - typeIndicator + 1:i]['Low'])
+            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_MIN_MAX', stoc_min_max)
+            
+            stoc_k = (stoc_low / stoc_min_max) * 100
+            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_K', stoc_k)
+            
+            stoc_percD = (stoc_k + tempFeatures[-fastMove1+1:]['STOC_' + str(typeIndicator) + '_K'].sum()) / fastMove1 
+            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_percD', stoc_percD)
+    
+            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_K-D', stoc_k - stoc_percD)
+
+            tempFeatures = tempFeatures.append(stc,ignore_index=True)
+        bin_names = self.getlist(self.config['STOC_BINS'].get("bin_names"), str)
+        bin_ranges = self.getlist(self.config['STOC_BINS'].get("bin_ranges"), float)
+        stc['STOCK_' + str(typeIndicator) + '_K_CAT'] = pd.cut(stc['STOC_' + str(typeIndicator) + '_K'].values, bin_ranges, labels=bin_names, include_lowest=True)
+            
+        return stc
+    
     
     def getStcFeaturesTny(self, inputData, typeIndicator):
        
@@ -133,7 +160,7 @@ class Features:
             stc.set_value(i, 'STOC_' + 'RANGE_' +str(typeIndicator) , stoc_min_max)
             
             stoc_k = (stoc_low / stoc_min_max) * 100
-            stc.set_value(i, 'STOC_' + str(typeIndicator) + '_K', stoc_k)
+            stc.set_value(i, 'sto_' + str(typeIndicator), stoc_k)
 
             tempFeatures = tempFeatures.append(stc,ignore_index=True)
             
@@ -178,7 +205,7 @@ class Features:
             
         bin_names = self.getlist(self.config['RSI_BINS'].get("bin_names"), str)
         bin_ranges = self.getlist(self.config['RSI_BINS'].get("bin_ranges"), float)
-        rsi['RSI_' + str(strength) + '_CATEGORY'] = pd.cut(rsi['RSI_' + str(strength)].values, bin_ranges, labels=bin_names, include_lowest=True)
+        rsi['RSI_' + str(strength) + '_Category'] = pd.cut(rsi['RSI_' + str(strength)].values, bin_ranges, labels=bin_names, include_lowest=True)
                
         return rsi
     
@@ -212,7 +239,7 @@ class Features:
             rs = up / down
             rsi.set_value(i, 'Relative_S_' + str(strength), rs)
             rsi_perc = 100. - 100. / (1. + rs)
-            rsi.set_value(i, 'RSI_' + str(strength), rsi_perc)
+            rsi.set_value(i, 'rsi_' + str(strength), rsi_perc)
             
             tempFeatures = tempFeatures.append(rsi,ignore_index=True)
             
@@ -262,6 +289,21 @@ class Features:
             mom.set_value(i, "momentum_" + str(typeIndicator), delta)
            
         return mom
+    
+    
+    def closeByFeatures(self, inputData, typeIndicator):
+        clsByFeature = pd.DataFrame()
+        
+        iteration = inputData['ID'].values
+        for i in iteration[-self.n:]:
+            if(typeIndicator == "High"):
+                delta = ((inputData['Close'][i] / inputData['High'][i]) - 0.95) * 100
+                clsByFeature.set_value(i, "Clo_by_"+  str(typeIndicator) +"_min95", delta)
+            elif(typeIndicator == "Low"):
+                delta = ((inputData['Close'][i] / inputData['Low'][i]) - 0.95) * 100
+                clsByFeature.set_value(i, "Close_by_"+  str(typeIndicator) +"_min95", delta)
+         
+        return clsByFeature
     
     
     def getlist(self, option, dataType):

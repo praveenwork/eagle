@@ -115,8 +115,8 @@ public class EnrichingDataTaskLet implements Tasklet {
 					command.append(enrichDataFilePath).append(EMPTY_SPACE);
 					command.append(dateString).append(EMPTY_SPACE);
 					
-					//command.append(instrument.getSymbol()).append(EMPTY_SPACE);
-					command.append("ess").append(EMPTY_SPACE); //FIXME: ??
+					command.append(instrument.getSymbol()).append(EMPTY_SPACE);
+					//command.append("ess").append(EMPTY_SPACE); //FIXME: ??
 					command.append(enrichDataToolsDirectory+configPath);
 					LOGGER.info("Enrich Data Command:"+ command);
 					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
