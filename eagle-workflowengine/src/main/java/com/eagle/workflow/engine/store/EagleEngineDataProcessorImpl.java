@@ -22,6 +22,7 @@ import org.supercsv.prefs.CsvPreference;
 
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
+import com.eagle.contract.constants.EagleCellProcessor;
 import com.eagle.contract.model.BaseInstrumentPredictionData;
 import com.eagle.contract.model.InstrumentHistoricalData;
 import com.eagle.contract.model.InstrumentPredictionData;
@@ -141,10 +142,11 @@ public class EagleEngineDataProcessorImpl<T> implements EagleEngineDataProcessor
 			CellProcessor[] customProcessors = new CellProcessor[fileHeaders.length];
 			ObjectMapper objectMapper = new ObjectMapper();
 			Map<String,Object> beanProperties = objectMapper.convertValue(clazz.newInstance(), Map.class);
+			
 			for (int i = 0, j=0; i < fileHeaders.length; i++) {
 				if (beanProperties.get(fileHeaders[i]) != null) {
 					customHeader[i] = fileHeaders[i];
-					customProcessors[i] = beanCustomerProcessors[j];
+					customProcessors[i] = EagleCellProcessor.getCellProcessor(fileHeaders[i]);//beanCustomerProcessors[j];
 					j++;
 				} else {
 					customHeader[i] = null;

@@ -3,6 +3,8 @@ package com.eagle.contract.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ParseDouble;
@@ -184,5 +186,4 @@ public class InstrumentHistoricalData extends StoreData implements Serializable 
         };
         return processors;
 	}
-	
 }
