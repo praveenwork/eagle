@@ -75,7 +75,7 @@ public class PositionEngineTaskLet implements Tasklet {
 	@Override
 	@SuppressWarnings("unchecked")
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-		LOGGER.debug("Position Engine Tasklet in progress...");
+		LOGGER.debug("*** Position Engine Tasklet in progress...***");
 		try {
 			String predictionsDirectory =  eagleEngineFileUtils.getModelOutputPath();
 			
@@ -84,47 +84,69 @@ public class PositionEngineTaskLet implements Tasklet {
 			InstrumentPredictionData predictionData = null;
 			List<String> twsAccounts = eagleTWSClient.getAccounts();
 			for (Instrument instrument : instrumentsList) {
-				if ("es".equalsIgnoreCase(instrument.getSymbol())) { //FIXME: delete this condition
-					predictionFilePath = predictionsDirectory + instrument.getSymbol() + PREDICTION_FILE_SUFFIX;
-					Path path = Paths.get(predictionFilePath);
-					if (path == null || Files.notExists(path)) {
-						throw new EagleException(EagleError.INVALID_PATH, predictionFilePath);
-					}
-					// Step 1a: fetch the last record from the prediction data
-					predictionData = (InstrumentPredictionData) dataProcessor
-							.getLastRecord(InstrumentPredictionData.class, predictionFilePath, true);
-					if (predictionData == null) {
-						throw new EagleException(EagleError.NO_PREDICTION_DATA, predictionFilePath);
-					}
-					LOGGER.info(predictionData.toString());
-					
-					// Step 1b: determinePrediction
-					InstrumentPosition nextDayPredictoin  = determinePrediction(predictionData.getNextdretPredicted());
-					
-					// Step 2: Query Interactive Broker to get Positions in the Portfolio.
-					int openPosition = getInstrumentOpenPosition(instrument, twsAccounts);
-					
-					// Step 3: Read the leverage factor
-					int leverageFactor = instrument.getLeverageFactor();
-					
-					InstrumentPosition position = determinePosition(openPosition);
-					// Step 4: Position Manager
-					EaglePositionEngineResult result = applyPositionRules(position, nextDayPredictoin,leverageFactor);
-					
-					// Step 5: check the position
-					int finalOpenPosition = getInstrumentOpenPosition(instrument, twsAccounts);
+				predictionFilePath = predictionsDirectory + instrument.getSymbol() + PREDICTION_FILE_SUFFIX;
+				Path path = Paths.get(predictionFilePath);
+				if (path == null || Files.notExists(path)) {
+					throw new EagleException(EagleError.INVALID_PREDICTION_PATH, predictionFilePath);
 				}
+				// Step 1a: fetch the last record from the prediction data
+				predictionData = (InstrumentPredictionData) dataProcessor
+						.getLastRecord(InstrumentPredictionData.class, predictionFilePath, true);
+				if (predictionData == null) {
+					throw new EagleException(EagleError.NO_PREDICTION_DATA, predictionFilePath);
+				}
+				LOGGER.info(predictionData.toString());
+
+				// Step 1b: desiredPosition
+				InstrumentPosition nextDayPosition  = desiredPosition(predictionData.getNextdretPredicted(), instrument.getPredictionValue());
+
+				// Step 2: Query Interactive Broker to get Positions in the Portfolio.
+				int openPosition = getInstrumentOpenPosition(instrument, twsAccounts);
+				LOGGER.info("Open Position from Interactive Broker: "+openPosition);
+
+				// Step 3: Read the leverage factor
+				int leverageFactor = instrument.getLeverageFactor();
+				LOGGER.info("Leverage Factor from Configuraiton: "+leverageFactor);
+
+				InstrumentPosition todayPosition = determinePosition(openPosition);
+				LOGGER.info("Is Position Long Or Short: "+todayPosition.name());
+
+				// Step 4: Position Manager
+				EaglePositionEngineResult result = applyPositionRules(todayPosition, nextDayPosition, leverageFactor, openPosition);
+				LOGGER.info("Appled Position rules: "+result.toString());
+
+				// Step 5: Calculating the limit price of the order
+
+				// FIXME: Make api call to get current price of ES from Interactive Broker.
+				/*ex: current price at this sec.. $2001
+				 *    If order is sell (from EaglePositionEngineResult), (2001 -  instrument.getPriceLimit())
+				 *    If order is Buy (from EaglePositionEngineResult), (2001 +  instrument.getPriceLimit())
+				 */    
+
+				// Step 6: clean all open orders calls (IB)
+
+				// step 7 : submit order for tomorrows position (IB)
+
+				// Step 8: Wait for order execution status (from IB)
+
+				// Step 9: Create STOP LIMIT Order (IB)
+
+
+				int finalOpenPosition = getInstrumentOpenPosition(instrument, twsAccounts);
 			}
+		} catch (EagleException e) {
+			throw e;
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, e, e.getMessage());
 		}
-		LOGGER.debug("Position Engine Tasklet completed");
+		LOGGER.debug("*** Position Engine Tasklet completed ***");
 		return RepeatStatus.FINISHED;
 	}
 	
 	//-----------Helpers--------------
-	private InstrumentPosition determinePrediction(double nextDayPredection){
-		if(nextDayPredection == 1){
+	private InstrumentPosition desiredPosition(double nextDayPredection, int predictionValue){
+		if(nextDayPredection*predictionValue == 1){
 			return InstrumentPosition.LONG;
 		}
 		return InstrumentPosition.SHORT;
@@ -137,18 +159,24 @@ public class PositionEngineTaskLet implements Tasklet {
 		}
 	}
 	
-	private EaglePositionEngineResult applyPositionRules(InstrumentPosition position,InstrumentPosition nextDayPredection, int leverageFactor){
+	private EaglePositionEngineResult applyPositionRules(InstrumentPosition todayPosition,
+			InstrumentPosition nextDayPredection, int leverageFactor, int openPosition) {
 		EaglePositionEngineResult eaglePositionEngineResult = new EaglePositionEngineResult();
-		if (InstrumentPosition.LONG == position && InstrumentPosition.LONG == nextDayPredection) {
+		if (InstrumentPosition.LONG == todayPosition && InstrumentPosition.LONG == nextDayPredection) {
 			// nothing to do
 			eaglePositionEngineResult.setPosition(InstrumentPosition.DO_NOTHING);
-		} else if (InstrumentPosition.LONG == position && InstrumentPosition.SHORT == nextDayPredection) {
+		} else if (InstrumentPosition.LONG == todayPosition && InstrumentPosition.SHORT == nextDayPredection) {
 			// Need to submit a limit order to sell shares
-			eaglePositionEngineResult.setPosition(InstrumentPosition.ASK);
-			//With a leverageFactor 1, we submit a limit order to sell 2 contracts of the instruments
-		} else if(InstrumentPosition.SHORT == position && InstrumentPosition.LONG == nextDayPredection){
+			eaglePositionEngineResult.setPosition(InstrumentPosition.SELL);
+			// Find the contract count using Formula for find the contact
+			// Ex: if leverageFactor = 2 and today Open Positions is 2 then tomorrowPrediction(sell) = -2-2 = abs(-4) = 4  
+			eaglePositionEngineResult.setContractCount(Math.abs(-leverageFactor - openPosition));
+		} else if(InstrumentPosition.SHORT == todayPosition && InstrumentPosition.LONG == nextDayPredection){
 			// Need to submit a limit order to buy
-			eaglePositionEngineResult.setPosition(InstrumentPosition.BID);
+			eaglePositionEngineResult.setPosition(InstrumentPosition.BUY);
+			// Find the contract count using Formula for find the contact
+			// Ex: if leverageFactor = 2 and today Open Positions is 2 then tomorrowPrediction(buy) = 2+2 =  4  
+			eaglePositionEngineResult.setContractCount(Math.abs(leverageFactor + openPosition));
 		}
 		return eaglePositionEngineResult;
 	}

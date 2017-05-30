@@ -50,7 +50,7 @@ public class EagleTWSClient  implements BrokerService {
 	@Override
 	public void extractHistoricalData(Instrument instrument, int duration) throws EagleException {
 		try {
-			LOGGER.debug("Requsting Historcial Data for Instrument: "+instrument.getSymbol());
+			LOGGER.debug("Requsting Historcial Data for Instrument [From IB]: "+instrument.getSymbol());
 			
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
 			String endDateTime = LocalDateTime.now().format(formatter);

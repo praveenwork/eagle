@@ -6,7 +6,7 @@ dependencies {
 	compile("javax.mail:javax.mail-api:1.5.6")
 	compile("com.sun.mail:javax.mail:1.5.1")
 	compile files('libs/twaclient.jar')
- 	compile('com.yahoofinance-api:YahooFinanceAPI:3.6.1')
+ 	compile('com.yahoofinance-api:YahooFinanceAPI:3.8.0')
 	testCompile files('libs/twaclient.jar')
 	
 }

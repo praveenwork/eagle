@@ -27,9 +27,17 @@ public class EagleError {
     public static final EagleError FAILED_TO_EXECUTE_PROCESS =
             new EagleError("Failed execute the command: ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
-    
     public static final EagleError INVALID_PATH =
             new EagleError("Invalid file Path: ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError INVALID_PREDICTION_PATH  =
+            new EagleError("Instrument Prediction file not found. Path: '%s'.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError INVALID_ENRICHDATA_PATH  =
+            new EagleError("Instrument EnrichData file not found. Path: '%s'.", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    
+    public static final EagleError INVALID_PKLFILE_PATH  =
+            new EagleError("Instrument PKL file not found. Path: '%s'.", HttpStatus.INTERNAL_SERVER_ERROR.value());
     
     public static final EagleError FAILD_TO_WRITE_DATA_INFILE =
             new EagleError("Failed to write data in file : ''%s''.", HttpStatus.INTERNAL_SERVER_ERROR.value());

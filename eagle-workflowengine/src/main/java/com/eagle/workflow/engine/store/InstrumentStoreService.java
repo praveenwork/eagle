@@ -1,5 +1,7 @@
 package com.eagle.workflow.engine.store;
 
+import java.util.List;
+
 import com.eagle.contract.model.InstrumentHistoricalData;
 
 /**
@@ -9,4 +11,6 @@ import com.eagle.contract.model.InstrumentHistoricalData;
 public interface InstrumentStoreService {
 	
 	public Boolean storeRawData(InstrumentHistoricalData historicalData);
+	
+	public void storeRawData(List<InstrumentHistoricalData> historicalDataList);
 }

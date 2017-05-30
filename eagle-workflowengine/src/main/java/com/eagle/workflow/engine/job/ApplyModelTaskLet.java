@@ -1,5 +1,7 @@
 package com.eagle.workflow.engine.job;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -90,26 +92,32 @@ public class ApplyModelTaskLet implements Tasklet {
 			String enrichDataFilePath = null;
 			String picklefile = null;
 			for (Instrument instrument : instrumentsList) {
-				if ("es".equalsIgnoreCase(instrument.getSymbol())) { //FIXME: delete this condition
-					command = new StringBuilder();
-					command.append(baseCommand).append(EMPTY_SPACE);
-
-					enrichDataFilePath = enrichDataDirectory + instrument.getSymbol() + ENRICH_DATA_SUFFIX;
-					picklefile = modelPKLDirectory + instrument.getSymbol() + PKL_FILE_SUFFIX;
-
-					command.append("--input=").append(enrichDataFilePath).append(EMPTY_SPACE);
-					command.append("--picklefile=").append(picklefile).append(EMPTY_SPACE);
-					command.append("--output=")
-							.append(modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX);
-					LOGGER.info("Apply Model Command:" + command);
-					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
-					if (executeResult.isExecStatus()) {
-						LOGGER.info("Apply Model process command executed succesfully.");
-					} else {
-						LOGGER.error("Apply Model process command execution failed. Reason:"+executeResult.getErrorMessage());
-					}
-					command = null;
+				command = new StringBuilder();
+				command.append(baseCommand).append(EMPTY_SPACE);
+				enrichDataFilePath = enrichDataDirectory + instrument.getSymbol() + ENRICH_DATA_SUFFIX;
+				picklefile = modelPKLDirectory + instrument.getSymbol() + PKL_FILE_SUFFIX;
+				
+				if(!Files.exists(Paths.get(enrichDataFilePath))){
+					throw new EagleException(EagleError.INVALID_ENRICHDATA_PATH, enrichDataFilePath);
 				}
+				if(!Files.exists(Paths.get(picklefile))){
+					throw new EagleException(EagleError.INVALID_PKLFILE_PATH, enrichDataFilePath);
+				}
+				command.append("--input=").append(enrichDataFilePath).append(EMPTY_SPACE);
+				command.append("--picklefile=").append(picklefile).append(EMPTY_SPACE);
+				command.append("--output=")
+				.append(modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX);
+				LOGGER.info("Apply Model Command:" + command);
+				EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
+				if (executeResult.isExecStatus()) {
+					LOGGER.info("Apply Model process command executed succesfully.");
+				} else {
+					LOGGER.error("Apply Model process command execution failed. Reason:"+executeResult.getErrorMessage());
+				}
+				if(Files.notExists(Paths.get(modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX))){
+					throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, "Instrrument Prediction File not generated:"+modelOutputDirectory + instrument.getSymbol() + OUTPUT_FILE_SUFFIX);
+				}
+				command = null;
 			}
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, e, e.getMessage());

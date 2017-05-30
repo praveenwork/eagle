@@ -2,10 +2,8 @@ package com.eagle.workflow.engine.service;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -17,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import com.eagle.boot.config.exception.EagleException;
+import com.eagle.contract.constants.EagleContractConstants;
+import com.eagle.contract.constants.InstrumentHistoricalDataProvider;
 import com.eagle.contract.model.Instrument;
 import com.eagle.contract.model.InstrumentHistoricalData;
 import com.eagle.workflow.engine.repository.ExtractDataJobRepository;
@@ -24,7 +24,9 @@ import com.eagle.workflow.engine.repository.InstrumentRepository;
 import com.eagle.workflow.engine.repository.JobStatus;
 import com.eagle.workflow.engine.store.EagleEngineDataProcessor;
 import com.eagle.workflow.engine.tws.client.EagleTWSClient;
+import com.eagle.workflow.engine.utils.EagleEngineDateUtils;
 import com.eagle.workflow.engine.utils.EagleEngineFileUtils;
+import com.eagle.workflow.engine.yahoofinance.client.YahooFinanceClient;
 
 /**
  * @author ppasupuleti
@@ -37,7 +39,10 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 	
 	@Autowired
 	private EagleTWSClient eagleTWSClient;
-
+	
+	@Autowired
+	private YahooFinanceClient yahooFinanceClient;
+	
 	@Autowired
 	private InstrumentRepository instrumentRepository;
 	
@@ -48,10 +53,10 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 	private EagleEngineFileUtils eagleEngineFileUtils;
 	
 	@Autowired
-	private EagleEngineDataProcessor<InstrumentHistoricalData> dataProcessor;
+	private EagleEngineDateUtils eagleEngineDateUtils;
 	
-	private static final int MAX_IB_SUPPORTED_HISTORICAL_DAYS = 365;
-	private static final int DEFAULT_DURATION = 9;
+	@Autowired
+	private EagleEngineDataProcessor<InstrumentHistoricalData> dataProcessor;
 	
 	private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	
@@ -72,22 +77,29 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 					//Fetch the last historical Record from the instrument store file.
 					InstrumentHistoricalData latestHistoricalData = dataProcessor.getLastRecord(InstrumentHistoricalData.class, instrumentStorePath);
 					if (latestHistoricalData != null) {
-						duration = historicalDataDuration(LocalDate.parse(latestHistoricalData.getDate(), dateFormatter));
+						duration = eagleEngineDateUtils.getHistoricalDataDuration(LocalDate.parse(latestHistoricalData.getDate(), dateFormatter),instrument.getHistoricalDataProvider());
 					} else {
-						LOGGER.info("No historical data found for instrument : ["+instrument.getSymbol()+"] , hence setting dufault duration : "+DEFAULT_DURATION);
-						duration = DEFAULT_DURATION;
+						LOGGER.info("No historical data found for instrument : [" + instrument.getSymbol()
+								+ "] , hence setting dufault duration : " + EagleContractConstants.DEFAULT_DURATION);
+						duration = EagleContractConstants.DEFAULT_DURATION;
 					}
 				} else{
-					duration = DEFAULT_DURATION;
+					duration = EagleContractConstants.DEFAULT_DURATION;
 				}
 				
 				if (duration <= 0) {
 					LOGGER.info("Today's data already extracted for instrument:"+instrument.getSymbol());
 				} else {
-					eagleTWSClient.extractHistoricalData(instrument, duration); 
-					extractDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
+					if (instrument.getHistoricalDataProvider()
+							.equalsIgnoreCase(InstrumentHistoricalDataProvider.IB.name())) {
+						eagleTWSClient.extractHistoricalData(instrument, duration); 
+						extractDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
+					} else {
+						yahooFinanceClient.extractHistoricalData(instrument, duration);
+					}
 				}
 			}
+			
 			ListenableFuture<Boolean> jobStatusListen = extractDataJobRepository.isJobsDone();
 			LOGGER.debug("jobStatusListen is done?"+jobStatusListen.isDone());
 			if(jobStatusListen.get()){
@@ -101,24 +113,6 @@ public class DataExtractorServiceImpl implements DataExtractorService {
 			e.printStackTrace();
 		}
 		return false;
-	}
-	
-	//--------------Helpers----------------
-	private int historicalDataDuration(LocalDate lastRecordDate) {
-		int duration = 0;
-		LocalDate today = LocalDate.now();
-		int addDays = 1; // Need to fetch data from LastRecordDay after
-		int weeks = (int) ChronoUnit.WEEKS.between(lastRecordDate.plusDays(addDays), today);
-		int days = (int) ChronoUnit.DAYS.between(lastRecordDate.plusDays(addDays), today);
-		duration = days - (weeks * 2);
-		// if the lastRecordDate is a Friday and
-		if ((weeks != 0) && (days % weeks != 0) && (lastRecordDate.getDayOfWeek() == DayOfWeek.FRIDAY)) {
-			duration = duration - 2;
-		}
-		if (duration > MAX_IB_SUPPORTED_HISTORICAL_DAYS) {
-			duration = MAX_IB_SUPPORTED_HISTORICAL_DAYS;
-		}
-		return duration;
 	}
 	
 }

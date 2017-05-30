@@ -1,13 +1,15 @@
 [  
    {  
-      "name":"ES",
+      "name":"ZN",
       "type":"FUTURES",
-      "symbol":"ES",
-      "exchnage":"GLOBEX",
+      "symbol":"ZN",
+      "yfsymbol": "ZN",
+      "exchnage":"ECBOT",
       "currency":"USD",
-      "expiry":"20170616",
+      "expiry":"20170621",
       "leverage_factor":1,
-      "prediction_value":1,
-      "price_limit":2082.00
+      "prediction_value":-1,
+      "price_limit":0.25,
+      "historical_data_provider":"YAHOO"
    }
 ]

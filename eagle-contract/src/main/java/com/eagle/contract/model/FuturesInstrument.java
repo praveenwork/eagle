@@ -1,9 +1,5 @@
 package com.eagle.contract.model;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
-
 public class FuturesInstrument extends Instrument {
 
 	private static final long serialVersionUID = 1L;

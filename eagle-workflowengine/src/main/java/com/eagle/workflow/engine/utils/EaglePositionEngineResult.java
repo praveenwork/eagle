@@ -10,7 +10,7 @@ public class EaglePositionEngineResult {
 	
 	private InstrumentPosition position;
 	
-	private int sharesCount;
+	private int contractCount;
 
 	public InstrumentPosition getPosition() {
 		return position;
@@ -20,11 +20,11 @@ public class EaglePositionEngineResult {
 		this.position = position;
 	}
 
-	public int getSharesCount() {
-		return sharesCount;
+	public int getContractCount() {
+		return contractCount;
 	}
 
-	public void setSharesCount(int sharesCount) {
-		this.sharesCount = sharesCount;
+	public void setContractCount(int contractCount) {
+		this.contractCount = contractCount;
 	}
 }

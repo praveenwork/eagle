@@ -1,7 +1,8 @@
 package com.eagle.workflow.engine.job;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import com.eagle.contract.model.Instrument;
 import com.eagle.workflow.engine.config.EagleEnrichDataProperties;
 import com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties;
 import com.eagle.workflow.engine.repository.InstrumentRepository;
+import com.eagle.workflow.engine.utils.EagleEngineDateUtils;
 import com.eagle.workflow.engine.utils.EagleEngineFileUtils;
 import com.eagle.workflow.engine.utils.EagleProcessExecutor;
 import com.eagle.workflow.engine.utils.EagleProcessExecutorResult;
@@ -41,6 +43,9 @@ public class EnrichingDataTaskLet implements Tasklet {
 	
 	@Autowired
 	private EagleEngineFileUtils eagleEngineFileUtils;
+	
+	@Autowired
+	private EagleEngineDateUtils eagleEngineDateUtils;
 	
 	private static final String DATA_FILE_EXTENSION = ".csv";
 	
@@ -99,37 +104,50 @@ public class EnrichingDataTaskLet implements Tasklet {
 			String rawFilePath =  null;
 			String enrichModelFilePath = null;
 			String enrichDataFilePath = null;
-			String dateString = dateFormat.format(new Date());
-			
+			String dateString = eagleEngineDateUtils.getEnrichDataToolRunDate();//dateFormat.format(new Date());
 			for (Instrument instrument : instrumentsList) {
-				if("es".equalsIgnoreCase(instrument.getSymbol())){ //FIXME: delete this condition
-					command = new StringBuilder();
-					command.append(baseCommand).append(EMPTY_SPACE);
-					
-					rawFilePath = rawDataDirectory + instrument.getSymbol() + DATA_FILE_EXTENSION;
-					enrichModelFilePath = enrichDataModelDirectory + instrument.getSymbol()+ MODEL_DATA_SUFFIX;
-					enrichDataFilePath = enrichDataDirectory + instrument.getSymbol()+ ENRICH_DATA_SUFFIX;
-					
-					command.append(rawFilePath).append(EMPTY_SPACE);
-					command.append(enrichModelFilePath).append(EMPTY_SPACE);
-					command.append(enrichDataFilePath).append(EMPTY_SPACE);
-					command.append(dateString).append(EMPTY_SPACE);
-					
-					command.append(instrument.getSymbol().toLowerCase()).append(EMPTY_SPACE);
-					//command.append("ess").append(EMPTY_SPACE); //FIXME: ??
-					command.append(enrichDataToolsDirectory+configPath);
-					LOGGER.info("Enrich Data Command:"+ command);
-					EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
-					if (executeResult.isExecStatus()) {
-						LOGGER.info("Enrich Data process command executed succesfully.");
-					} else {
-						LOGGER.error("Enrich Data process command execution failed. Reason:"+executeResult.getErrorMessage());
-					}
-					command = null;
-					rawFilePath =  null;
-					enrichModelFilePath = null;
-					enrichDataFilePath = null;
+				command = new StringBuilder();
+				command.append(baseCommand).append(EMPTY_SPACE);
+
+				rawFilePath = rawDataDirectory + instrument.getSymbol() + DATA_FILE_EXTENSION;
+				enrichModelFilePath = enrichDataModelDirectory + instrument.getSymbol()+ MODEL_DATA_SUFFIX;
+				enrichDataFilePath = enrichDataDirectory + instrument.getSymbol()+ ENRICH_DATA_SUFFIX;
+				
+				if (!Files.exists(Paths.get(rawFilePath))) {
+					LOGGER.error("Instrument Raw File path is not exist. Path:["+ rawFilePath+"]");
+					throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, "Instrument Raw File path is not exist. Path:["+ rawFilePath+"]");
 				}
+				
+				if (!Files.exists(Paths.get(enrichModelFilePath))) {
+					LOGGER.error("Instrument Enrich model File path is not exist. Path:["+ enrichModelFilePath+"]");
+					throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP,
+							"Instrument Enrich model File path is not exist. Path:[" + enrichModelFilePath + "]");
+				}
+				
+				LOGGER.info("Enrich Data Input is valid. Tring to construct the command...");
+				
+				command.append(rawFilePath).append(EMPTY_SPACE);
+				command.append(enrichModelFilePath).append(EMPTY_SPACE);
+				command.append(enrichDataFilePath).append(EMPTY_SPACE);
+				command.append(dateString).append(EMPTY_SPACE);
+
+				command.append(instrument.getSymbol().toLowerCase()).append(EMPTY_SPACE);
+				command.append(enrichDataToolsDirectory+configPath);
+				LOGGER.info("Enrich Data Command:"+ command);
+				EagleProcessExecutorResult executeResult = eagleProcessExecutor.execute(command.toString());
+				if (executeResult.isExecStatus()) {
+					LOGGER.info("Enrich Data process command executed succesfully.");
+					if (!Files.exists(Paths.get(enrichDataFilePath))) {
+						LOGGER.error("Instrument Enrich Data file not generated. Path:["+ enrichDataFilePath+"]");
+						throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, "Instrument Enrich Data file not generated. Path:["+ enrichDataFilePath+"]");
+					}
+				} else {
+					LOGGER.error("Enrich Data process command execution failed. Reason:"+executeResult.getErrorMessage());
+				}
+				command = null;
+				rawFilePath =  null;
+				enrichModelFilePath = null;
+				enrichDataFilePath = null;
 			}
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_ENRICHDATA_STEP, e, e.getMessage());

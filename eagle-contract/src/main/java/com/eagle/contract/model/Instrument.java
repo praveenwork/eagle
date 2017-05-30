@@ -19,6 +19,9 @@ public abstract class Instrument implements Serializable{
 	@JsonProperty(EagleContractConstants.INSTRUMENT_SYMBOL)
 	private String symbol;
 	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_YAHOO_SYMBOL)
+	private String yfsymbol;
+	
 	@JsonProperty(EagleContractConstants.INSTRUMENT_EXCHANGE)
 	private String exchange;
 	
@@ -40,6 +43,10 @@ public abstract class Instrument implements Serializable{
 	@JsonProperty(EagleContractConstants.INSTRUMENT_PREDICTION_VALUE)
 	private int predictionValue;
 
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_DATA_PROVIDER)
+	private String historicalDataProvider;
+	
 	public abstract InstrumentType getInstrumentType();
 	
 	public Instrument() {
@@ -115,5 +122,21 @@ public abstract class Instrument implements Serializable{
 
 	public void setPredictionValue(int predictionValue) {
 		this.predictionValue = predictionValue;
+	}
+
+	public String getYfsymbol() {
+		return yfsymbol;
+	}
+
+	public void setYfsymbol(String yfsymbol) {
+		this.yfsymbol = yfsymbol;
+	}
+
+	public String getHistoricalDataProvider() {
+		return historicalDataProvider;
+	}
+
+	public void setHistoricalDataProvider(String historicalDataProvider) {
+		this.historicalDataProvider = historicalDataProvider;
 	}
 }

@@ -7,7 +7,7 @@ package com.eagle.contract.constants;
 public enum InstrumentPosition {
 	LONG,
 	SHORT,
-	ASK,
-	BID,
+	SELL,
+	BUY,
 	DO_NOTHING;
 }

@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +91,13 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 		return storeStatus;
 	}
 	
+	@Override
+	public void storeRawData(List<InstrumentHistoricalData> historicalDataList) {
+		for (InstrumentHistoricalData instrumentHistoricalData : historicalDataList) {
+			storeRawData(instrumentHistoricalData);
+		}
+	}
+
 	//---------Helpers--------
 	private Boolean saveCsv(String path, InstrumentHistoricalData historicalData){
 		Path inputPath = Paths.get(path);
@@ -97,7 +105,7 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 			InstrumentHistoricalData lastHistoricalRecord = dataProcessor.getLastRecord(InstrumentHistoricalData.class, path);
 			if (lastHistoricalRecord != null) {
 				int lastRecordId = lastHistoricalRecord.getId();
-				historicalData.setId(lastRecordId+1);
+				historicalData.setId(lastRecordId + 1);
 			} else {
 				historicalData.setId(1);
 			}

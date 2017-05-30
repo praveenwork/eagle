@@ -54,7 +54,7 @@ def main(config):
                        f.closeByFeatures(interim, "High"),
                        f.closeByFeatures(interim, "Low"),
                        f.getCCFeatures(interim, 3),
-                       f.getCCFeatures(interim, 5),
+                       f.getCCFeatures(interim, 5), 
                        f.getStcFeaturesFastMove(interim,7,3),
                        f.getStcFeatures(interim, 7),
                        f.getStcFeatures(interim, 3), 
@@ -66,9 +66,10 @@ def main(config):
                        f.typeDFeatures(interim, 3), 
                        f.typeDFeatures(interim, 5)
                        ]
-    elif(sys.argv[5] == "tny"):
-        featureList = [ 
+    elif(sys.argv[5] == "zn"):
+        featureList = [
                        data.ix[start+1:end],  
+                       f.monthWeekDay(interim),
                        f.typeDFeatures(interim, 1),
                        f.typeDFeatures(interim, 2),
                        f.getCCFeatures(interim, 3),
@@ -90,9 +91,11 @@ def main(config):
                        f.getMcdFeaturesTny(interim, 9, 3)
                        ] 
     else:
-        print("Unknown format.Please provide es or tny")
+        print("Unknown format.Please provide es or zn")
         sys.exit(0)
     print("Feature calculation Finished.!")
+    
+    #print "Feature List:", featureList
      
     final = pd.concat(featureList, axis=1)
     final = final.loc[:, ~final.columns.duplicated()]
@@ -107,8 +110,8 @@ def main(config):
                 'STOC_3_MIN_MAX', 'STOC_3_K', 'STOCK_3_K_CAT', 'STOC_7_LOW', 'STOC_7_MIN_MAX',
                 'STOC_7_K', 'STOC_7_percD', 'STOC_7_K-D', '1D_r', '1D_r_cat', '2D_r', '2D_r_cat',
                 '3D_r', '3D_r_cat', '5D_r', '5D_r_cat']
-    elif(sys.argv[5] == "tny"):
-        cols = ['ID','Date','Open','High','Low','Close','TPV','SMA_TPV(3)','MAD(3)','CCI_3',
+    elif(sys.argv[5] == "zn"):
+        cols = ['ID','Date','Open','High','Low','Close','Month','TPV','SMA_TPV(3)','MAD(3)','CCI_3',
                 'SMA_TPV(5)','MAD(5)','CCI_5','SMA_TPV(9)', 'MAD(9)', 'CCI_9','momentum_3',
                 'momentum_5','momentum_7','momentum_9','STOC_3_LOW','STOC_RANGE_3', 'sto_3',
                 'STOC_5_LOW','STOC_RANGE_5', 'sto_5','STOC_7_LOW','STOC_RANGE_7','sto_7',
@@ -119,7 +122,7 @@ def main(config):
 
 
     print("Writing Output File.!")
-    print "All Columns:", features.columns
+    #print "All Columns:", features.columns
     
     features[cols].append(final[cols], ignore_index=True).to_csv(sys.argv[3], index=False)
 
@@ -136,7 +139,7 @@ if __name__ == "__main__":
         print("""\
 This script will produce the features for stock prediction.
 
-Usage: python run_all.py inputDatacsvfile inputDatafeaturefile outputfilename date (es or tny)
+Usage: python run_all.py inputDatacsvfile inputDatafeaturefile outputfilename date (es or zn)
 help : Date format - MM/DD/YYYY
             """)
         sys.exit(0)

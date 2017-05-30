@@ -48,7 +48,15 @@ public class InstrumentRepositoryFactory {
 			instrument.setExchange((String) row.get("exchnage"));
 			instrument.setPrimaryExchange((String) row.get("primaryExchange"));
 			instrument.setSymbol((String) row.get("symbol"));
+			
+			instrument.setYfsymbol((String) row.get("yfsymbol"));
+			instrument.setLeverageFactor((Integer) row.get("leverage_factor"));
+			instrument.setPredictionValue((Integer) row.get("prediction_value"));
+			instrument.setPriceLimit((Double) row.get("price_limit"));
+			instrument.setHistoricalDataProvider((String) row.get("historical_data_provider"));
+			
 			String expiry = (String) row.get("expiry");
+			
 			if(StringUtils.isNoneBlank(expiry)){
 				instrument.setExpiry(expiry);
 			}

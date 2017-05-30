@@ -1,33 +1,26 @@
 [  
-  {  
-      "name":"Cisco Systems Inc",
-      "type":"STOCK",
-      "symbol":"CSCO",
-      "exchnage":"SMART",
-      "primaryExchange":"NASDAQ",
-      "currency":"USD"
-   },
-   {  
-      "name":"Amazon.com Inc",
-      "type":"STOCK",
-      "symbol":"AMZN",
-      "exchnage":"SMART",
-      "primaryExchange":"NASDAQ",
-      "currency":"USD"
-   },
    {  
       "name":"ES",
       "type":"FUTURES",
       "symbol":"ES",
+      "yfsymbol": "^GSPC",
       "exchnage":"GLOBEX",
       "currency":"USD",
-      "expiry":"20170616"
+      "expiry":"20170616",
+      "leverage_factor":1,
+      "prediction_value":1,
+      "price_limit":0.25
    },
    {  
-      "name":"SPX",
-      "type":"INDEX",
-      "symbol":"SPX",
-      "exchnage":"CBOE",
-      "currency":"USD"
+      "name":"ZN",
+      "type":"FUTURES",
+      "symbol":"ZN",
+      "yfsymbol": "ZN",
+      "exchnage":"ECBOT",
+      "currency":"USD",
+      "expiry":"20170621",
+      "leverage_factor":1,
+      "prediction_value":-1,
+      "price_limit":0.25
    }
 ]

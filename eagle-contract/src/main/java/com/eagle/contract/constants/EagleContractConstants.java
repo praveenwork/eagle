@@ -5,6 +5,8 @@ public class EagleContractConstants {
 	public static final String INSTRUMENT_NAME = "instrumentName";
 
 	public static final String INSTRUMENT_SYMBOL = "symbol";
+	
+	public static final String INSTRUMENT_YAHOO_SYMBOL = "yfsymbol";
 
 	public static final String INSTRUMENT_EXCHANGE = "exchange";
 
@@ -19,6 +21,8 @@ public class EagleContractConstants {
 	public static final String INSTRUMENT_PREDICTION_VALUE = "prediction_value";
 
 	public static final String INSTRUMENT_PRICE_LIMIT = "limit_price";
+	
+	public static final String INSTRUMENT_HISTORICAL_DATA_PROVIDER = "historical_data_provider";
 
 	public static final String INSTRUMENT_HISTORICAL_ID = "Id";
 
@@ -94,5 +98,9 @@ public class EagleContractConstants {
 	public static final String INSTRUMENT_PREDICTION_NEXTDRET_PREDICTED_LABELS = "nextdret_predicted_labels";
 	
 	public static final String INSTRUMENT_PREDICTION_NEXTDRET_RELATIVE_PROBABILITY = "nextdret_relative_probability";
+	
+	public static final int MAX_IB_SUPPORTED_HISTORICAL_DAYS = 365;
+	
+	public static final int DEFAULT_DURATION = 9;
 	
 }

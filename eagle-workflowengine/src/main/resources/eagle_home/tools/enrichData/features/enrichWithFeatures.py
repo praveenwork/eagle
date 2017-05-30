@@ -82,6 +82,24 @@ class Features:
         return mcd
     
     
+    def monthWeekDay(self, inputData):
+        typed = pd.DataFrame()
+        iteration = inputData['ID'].values
+        #typed['newDate']=pd.DatetimeIndex(inputData['Date'])
+        
+        #months=typed['newDate'].month
+        #dayofweeks=typed['newDate'].dayofweek
+        
+        for i in iteration[-self.n:]:
+            dateTS=pd.to_datetime(inputData.ix[i]['Date'])
+            month=dateTS.month
+            dayofweek=dateTS.dayofweek
+            typed.set_value(i,"Month",month)
+            typed.set_value(i,"dayofweek",dayofweek)
+        
+        #print "Month and Dayofweek:",typed          
+        return typed
+    
     def typeDFeatures(self, inputData, typeIndicator):
         typed = pd.DataFrame()
         iteration = inputData['ID'].values

@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Title: Eagle Work Flow Engine
-Implementation-Version: 1.0.0
-

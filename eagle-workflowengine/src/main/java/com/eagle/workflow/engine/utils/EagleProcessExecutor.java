@@ -25,14 +25,14 @@ public class EagleProcessExecutor {
 		try {
 			LOGGER.info("Process Command:"+ command);
 			Process process = Runtime.getRuntime().exec(command);//processBuilder.start();
+			result.setResponse(processResponse(process.getInputStream()));
+			result.setErrorMessage(processResponse(process.getErrorStream()));
 			int errorCode = process.waitFor();
 			if(errorCode == 0){
 				result.setExecStatus(true);
 			} else {
 				result.setExecStatus(false);
 			}
-			result.setResponse(processResponse(process.getInputStream()));
-			result.setErrorMessage(processResponse(process.getErrorStream()));
 			result.setErrorCode(errorCode);
 		} catch (IOException | InterruptedException e) {
 			throw new EagleException(EagleError.FAILED_TO_EXECUTE_PROCESS, command);
