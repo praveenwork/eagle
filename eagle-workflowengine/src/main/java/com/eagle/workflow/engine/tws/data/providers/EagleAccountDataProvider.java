@@ -61,7 +61,9 @@ public class EagleAccountDataProvider  implements IAccountHandler{
 		accountPosition.setMarketValue(position.marketValue());
 		accountPosition.setContractDescription(position.contract().description());
 		instrumentPositionMap.put(position.contract().symbol(), accountPosition);
-		positionDataJobRepository.updateStatus(this.instrument.getSymbol(), JobStatus.COMPLETED);
+		//if(position.contract().symbol().equals(this.instrument.getSymbol())){
+			positionDataJobRepository.updateStatus(this.instrument.getSymbol(), JobStatus.COMPLETED);
+		//}
 	}
 	
 	public static AccountPosition getAcccountPositionData(String instrumentSymbol) {

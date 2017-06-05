@@ -1,5 +1,5 @@
 [  
-   {  
+    {  
       "name":"ES",
       "type":"FUTURES",
       "symbol":"ES",
@@ -9,9 +9,9 @@
       "expiry":"20170616",
       "leverage_factor":1,
       "prediction_value":1,
-      "price_limit":0.25
-   },
-   {  
+      "price_limit":0.25,
+      "historical_data_provider":"IB"
+   },{  
       "name":"ZN",
       "type":"FUTURES",
       "symbol":"ZN",
@@ -21,6 +21,7 @@
       "expiry":"20170621",
       "leverage_factor":1,
       "prediction_value":-1,
-      "price_limit":0.25
+      "price_limit":0.25,
+      "historical_data_provider":"YAHOO"
    }
 ]

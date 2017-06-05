@@ -14,25 +14,25 @@ import org.springframework.util.concurrent.SettableListenableFuture;
  *
  */
 @Component
-public class PositionDataJobRepository {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PositionDataJobRepository.class);
+public class PlaceOrderDataJobRepository {
+	private static final Logger LOGGER = LoggerFactory.getLogger(PlaceOrderDataJobRepository.class);
 	
-	private static ConcurrentHashMap<String, JobStatus> positionJobMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, JobStatus> placeOrderJobMap = new ConcurrentHashMap<>();
 	
 	public void addJob(String jobId, JobStatus jobStatus){
-		positionJobMap.put(jobId, jobStatus);
+		placeOrderJobMap.put(jobId, jobStatus);
 	}
 	
 	public JobStatus getJobStatus(String jobId){
-		return positionJobMap.get(jobId);
+		return placeOrderJobMap.get(jobId);
 	}
 	
 	public void updateStatus(String jobId, JobStatus jobStatus){
-		positionJobMap.put(jobId, jobStatus);
+		placeOrderJobMap.put(jobId, jobStatus);
 	}
 	
 	public void removeJob(String jobId){
-		positionJobMap.remove(jobId);
+		placeOrderJobMap.remove(jobId);
 	}
 	
 	
@@ -53,7 +53,7 @@ public class PositionDataJobRepository {
 		SettableListenableFuture<Boolean> jobFuture = new SettableListenableFuture<>();
 		boolean result = true;
 		while (!jobFuture.isDone()) {
-			result = checkJobsStatus(instrumentSymbol);
+			result = checkJobsStatus();
 			if (result) {
 				jobFuture.set(true);
 			}
@@ -64,7 +64,7 @@ public class PositionDataJobRepository {
 	
 	private boolean checkJobsStatus() {
 		boolean result = true;
-		for (Map.Entry<String, JobStatus> mapEntry : positionJobMap.entrySet()) {
+		for (Map.Entry<String, JobStatus> mapEntry : placeOrderJobMap.entrySet()) {
 			if (mapEntry.getValue() != JobStatus.COMPLETED) {
 				result = false;
 				break;
@@ -72,15 +72,6 @@ public class PositionDataJobRepository {
 			if (mapEntry.getValue() == JobStatus.COMPLETED) {
 				removeJob(mapEntry.getKey());
 			}
-		}
-		return result;
-	}
-	
-	private boolean checkJobsStatus(String instrumentSymbol) {
-		boolean result = false;
-		JobStatus jobStatus = positionJobMap.get(instrumentSymbol);
-		if(jobStatus == JobStatus.COMPLETED){
-			result = true;
 		}
 		return result;
 	}

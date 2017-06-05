@@ -1,5 +1,6 @@
 package com.eagle.workflow.engine.yahoofinance.client;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -12,22 +13,24 @@ import org.springframework.stereotype.Component;
 
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
+import com.eagle.contract.model.FuturesInstrument;
 import com.eagle.contract.model.Instrument;
 import com.eagle.contract.model.InstrumentHistoricalData;
-import com.eagle.contract.service.BrokerService;
+import com.eagle.contract.service.BrokerHistoricalDataService;
 import com.eagle.workflow.engine.store.InstrumentStoreService;
 
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
+import yahoofinance.quotes.stock.StockQuote;
 
 /**
  * @author ppasupuleti
  *
  */
 @Component
-public class YahooFinanceClient implements BrokerService {
+public class YahooFinanceClient implements BrokerHistoricalDataService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(YahooFinanceClient.class);
 
@@ -46,6 +49,8 @@ public class YahooFinanceClient implements BrokerService {
 			Calendar to = Calendar.getInstance();
 			from.add(Calendar.DATE, -duration);
 			Stock stock = YahooFinance.get(instrument.getYfsymbol(), from, to, Interval.DAILY);
+			List<InstrumentHistoricalData> historicalDataList = buildInstrumentHistoricalData(instrument,stock.getHistory());
+			historicalDataList.add(includeCurrentDayData(instrument,stock.getQuote()));
 			instrumentStoreService.storeRawData(buildInstrumentHistoricalData(instrument,stock.getHistory()));
 			LOGGER.debug("Requsting Historcial Data Stored in file [From Yahoo Finance]: ");
 		} catch (EagleException e) {
@@ -53,22 +58,6 @@ public class YahooFinanceClient implements BrokerService {
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_EXTRACT_DATA, e.getMessage(), e);
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see com.eagle.contract.service.BrokerService#getPortifolioPosition(com.eagle.contract.model.Instrument, java.lang.String)
-	 */
-	@Override
-	public void getPortifolioPosition(Instrument instrument, String accountCode) {
-		// TODO Auto-generated method stub
-	}
-
-	/* (non-Javadoc)
-	 * @see com.eagle.contract.service.BrokerService#getAccounts()
-	 */
-	@Override
-	public List<String> getAccounts() {
-		return null;
 	}
 	
 	//-----------Helpers---------
@@ -91,5 +80,27 @@ public class YahooFinanceClient implements BrokerService {
 			historicalData = null;
 		}		
 		return InstrumentHistoricalDataList;
+	}
+	
+	private InstrumentHistoricalData includeCurrentDayData(Instrument instrument,  StockQuote stockQuote) throws ParseException{
+		InstrumentHistoricalData currentData = new InstrumentHistoricalData();
+		currentData.setInstrument(instrument);
+		currentData.setClose(stockQuote.getPrice().doubleValue());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+		currentData.setDate(dateFormat.format(dateFormat.parse(stockQuote.getLastTradeDateStr())));
+		currentData.setHigh(stockQuote.getDayHigh().doubleValue());
+		currentData.setLow(stockQuote.getDayLow().doubleValue());
+		currentData.setOpen(stockQuote.getOpen().doubleValue());
+		currentData.setVolume(stockQuote.getVolume());
+		currentData.setAdjClose(stockQuote.getPreviousClose().doubleValue());
+		return currentData;
+	}
+	
+	public static void main(String[] args) {
+		YahooFinanceClient client = new YahooFinanceClient();
+		Instrument instrument = new FuturesInstrument();
+		instrument.setYfsymbol("^TXN");
+		instrument.setSymbol("ES");
+		client.extractHistoricalData(instrument, 3);
 	}
 }

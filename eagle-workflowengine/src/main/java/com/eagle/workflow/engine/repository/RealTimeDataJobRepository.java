@@ -14,25 +14,25 @@ import org.springframework.util.concurrent.SettableListenableFuture;
  *
  */
 @Component
-public class PositionDataJobRepository {
-	private static final Logger LOGGER = LoggerFactory.getLogger(PositionDataJobRepository.class);
+public class RealTimeDataJobRepository {
+	private static final Logger LOGGER = LoggerFactory.getLogger(RealTimeDataJobRepository.class);
 	
-	private static ConcurrentHashMap<String, JobStatus> positionJobMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, JobStatus> realTimeDataJobMap = new ConcurrentHashMap<>();
 	
 	public void addJob(String jobId, JobStatus jobStatus){
-		positionJobMap.put(jobId, jobStatus);
+		realTimeDataJobMap.put(jobId, jobStatus);
 	}
 	
 	public JobStatus getJobStatus(String jobId){
-		return positionJobMap.get(jobId);
+		return realTimeDataJobMap.get(jobId);
 	}
 	
 	public void updateStatus(String jobId, JobStatus jobStatus){
-		positionJobMap.put(jobId, jobStatus);
+		realTimeDataJobMap.put(jobId, jobStatus);
 	}
 	
 	public void removeJob(String jobId){
-		positionJobMap.remove(jobId);
+		realTimeDataJobMap.remove(jobId);
 	}
 	
 	
@@ -64,7 +64,7 @@ public class PositionDataJobRepository {
 	
 	private boolean checkJobsStatus() {
 		boolean result = true;
-		for (Map.Entry<String, JobStatus> mapEntry : positionJobMap.entrySet()) {
+		for (Map.Entry<String, JobStatus> mapEntry : realTimeDataJobMap.entrySet()) {
 			if (mapEntry.getValue() != JobStatus.COMPLETED) {
 				result = false;
 				break;
@@ -78,7 +78,7 @@ public class PositionDataJobRepository {
 	
 	private boolean checkJobsStatus(String instrumentSymbol) {
 		boolean result = false;
-		JobStatus jobStatus = positionJobMap.get(instrumentSymbol);
+		JobStatus jobStatus = realTimeDataJobMap.get(instrumentSymbol);
 		if(jobStatus == JobStatus.COMPLETED){
 			result = true;
 		}

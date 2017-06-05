@@ -30,7 +30,7 @@ public class InstrumentSheduler {
 	  private Job job;
 	
 	//@Scheduled(cron="0 0 16 ? * MON-FRI")
-	@Scheduled(cron="0 0/1 * 1/1 * ?")
+	@Scheduled(cron="0 0/59 * 1/1 * ?")
 	@Async(value = "instrumentScheduler")
 	public void runScheduleJob(){
 		try {

@@ -1,5 +1,17 @@
 [  
-   {  
+    {  
+      "name":"ES",
+      "type":"FUTURES",
+      "symbol":"ES",
+      "yfsymbol": "^GSPC",
+      "exchnage":"GLOBEX",
+      "currency":"USD",
+      "expiry":"20170616",
+      "leverage_factor":1,
+      "prediction_value":1,
+      "price_limit":0.25,
+      "historical_data_provider":"IB"
+   },{  
       "name":"ZN",
       "type":"FUTURES",
       "symbol":"ZN",
