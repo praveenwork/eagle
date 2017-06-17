@@ -49,9 +49,4 @@ public class EagleEngineDateUtils {
 		}
 		return duration;
 	}
-
-	public static void main(String[] args) {
-		EagleEngineDateUtils utils = new EagleEngineDateUtils();
-		System.out.println(utils.getEnrichDataToolRunDate());
-	}
 }

@@ -22,6 +22,12 @@ public class EagleContractConstants {
 
 	public static final String INSTRUMENT_PRICE_LIMIT = "limit_price";
 	
+	public static final String INSTRUMENT_STOP_TRIGGER_PERCENTAGE = "stop_trigger_percentage";
+
+	public static final String INSTRUMENT_STOP_LIMIT_PERCENTAGE =  "stop_limit_percentage";
+	
+	public static final String INSTRUMENT_PRICE_ROUNDING_UNIT =   "price_rounding_unit";
+	
 	public static final String INSTRUMENT_HISTORICAL_DATA_PROVIDER = "historical_data_provider";
 
 	public static final String INSTRUMENT_HISTORICAL_ID = "Id";

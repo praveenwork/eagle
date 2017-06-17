@@ -53,6 +53,11 @@ public class InstrumentRepositoryFactory {
 			instrument.setLeverageFactor((Integer) row.get("leverage_factor"));
 			instrument.setPredictionValue((Integer) row.get("prediction_value"));
 			instrument.setPriceLimit((Double) row.get("price_limit"));
+			
+			instrument.setStopLimitPercentage((Double) row.get("stop_limit_percentage"));
+			instrument.setStopTriggerPercentage((Double) row.get("stop_trigger_percentage"));
+			instrument.setPriceRoundingUnit((Double) row.get("price_rounding_unit"));
+			
 			instrument.setHistoricalDataProvider((String) row.get("historical_data_provider"));
 			
 			String expiry = (String) row.get("expiry");

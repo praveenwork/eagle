@@ -22,7 +22,7 @@ public class EagleError {
             new EagleError("Failed to get postion for instrument : ''%S'' , Reason: ''%S''.", HttpStatus.BAD_REQUEST.value());
     
     public static final EagleError FAILED_TO_CANCEL_ALL_OPEN_ORDERS =
-            new EagleError("Failed to cancel all open orders. Reason: ''%S''.", HttpStatus.BAD_REQUEST.value());
+            new EagleError("Failed to cancel all open orders.", HttpStatus.BAD_REQUEST.value());
     
     public static final EagleError FAILED_TO_SUBMIT_ORDER =
             new EagleError("Failed to submit the order instrument : '%S' , Reason: ''%S''.", HttpStatus.BAD_REQUEST.value());

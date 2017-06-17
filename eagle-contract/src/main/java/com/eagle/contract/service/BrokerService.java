@@ -19,6 +19,6 @@ public interface BrokerService extends BrokerHistoricalDataService{
 	
 	public void placeOrder(Instrument instrument, EaglePositionEngineResult positionEngineResult, String account);
 	
-	public void setStopLimit(Instrument instrument);
+	public void placeStopLimitOrder(Instrument instrument, EaglePositionEngineResult positionEngineResult, String account);
 	
 }

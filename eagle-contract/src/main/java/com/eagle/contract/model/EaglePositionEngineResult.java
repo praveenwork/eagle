@@ -13,6 +13,12 @@ public class EaglePositionEngineResult {
 	private int contractCount;
 	
 	private double limitPrice;
+	
+	private double stopLimitPrice;
+	
+	private double stopPrice;
+	
+	
 
 	public InstrumentPositionState getPosition() {
 		return position;
@@ -38,9 +44,25 @@ public class EaglePositionEngineResult {
 		this.limitPrice = limitPrice;
 	}
 
+	public double getStopLimitPrice() {
+		return stopLimitPrice;
+	}
+
+	public void setStopLimitPrice(double stopLimitPrice) {
+		this.stopLimitPrice = stopLimitPrice;
+	}
+
+	public double getStopPrice() {
+		return stopPrice;
+	}
+
+	public void setStopPrice(double stopPrice) {
+		this.stopPrice = stopPrice;
+	}
+
 	@Override
 	public String toString() {
 		return "EaglePositionEngineResult [position=" + position.name() + ", contractCount=" + contractCount + ", limitPrice="
-				+ limitPrice + "]";
+				+ limitPrice + ", stopLimitPrice=" + stopLimitPrice + ", stopPrice=" + stopPrice + "]";
 	}
 }

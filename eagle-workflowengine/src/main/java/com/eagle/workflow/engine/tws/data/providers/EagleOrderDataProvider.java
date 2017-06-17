@@ -1,5 +1,6 @@
 package com.eagle.workflow.engine.tws.data.providers;
 
+import com.eagle.contract.model.EaglePositionEngineResult;
 import com.eagle.contract.model.Instrument;
 import com.eagle.workflow.engine.repository.JobStatus;
 import com.eagle.workflow.engine.repository.PlaceOrderDataJobRepository;
@@ -11,6 +12,7 @@ public class EagleOrderDataProvider implements IOrderHandler {
 
 	private PlaceOrderDataJobRepository placeOrderDataJobRepository;
 	private Instrument instrument;
+	
 	
 	public EagleOrderDataProvider(Instrument instrument, PlaceOrderDataJobRepository placeOrderDataJobRepository) {
 		this.placeOrderDataJobRepository = placeOrderDataJobRepository;
@@ -34,5 +36,4 @@ public class EagleOrderDataProvider implements IOrderHandler {
 		System.out.println("In order State mathod "+ status.toString() + " - filled -"+filled + "-  remaining - "+ remaining + " - avgFillPrice -"+avgFillPrice);
 		placeOrderDataJobRepository.updateStatus(this.instrument.getSymbol(), JobStatus.COMPLETED);
 	}
-
 }

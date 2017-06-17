@@ -205,7 +205,7 @@ public class EagleTWSClient  implements BrokerService {
 			order.totalQuantity(positionEngineResult.getContractCount());
 			order.orderType(OrderType.LMT);
 			order.lmtPrice(positionEngineResult.getLimitPrice());
-			order.tif(TimeInForce.DAY);
+			order.tif(TimeInForce.OPG);
 			
 			eagleAPI.placeOrModifyOrder(contract, order, orderDataProvider);
 			
@@ -219,6 +219,35 @@ public class EagleTWSClient  implements BrokerService {
 	}
 
 	@Override
-	public void setStopLimit(Instrument instrument) {
+	public void placeStopLimitOrder(Instrument instrument, EaglePositionEngineResult positionEngineResult, String account) {
+
+		try {
+			NewContract contract = NewContractFactory.getNewContract(instrument);
+			LOGGER.debug("Requsting Place order ["+instrument.getSymbol()+"]...");
+			EagleOrderDataProvider orderDataProvider = new EagleOrderDataProvider(instrument, placeOrderDataJobRepository);
+
+			NewOrder order = new NewOrder();
+			if(positionEngineResult.getPosition() == InstrumentPositionState.BUY){
+				order.action(Action.SELL);
+			} else {
+				order.action(Action.BUY);
+			}
+			order.totalQuantity(positionEngineResult.getContractCount());
+			order.orderType(OrderType.STP_LMT);
+			
+			order.lmtPrice(positionEngineResult.getStopLimitPrice());
+			order.auxPrice(positionEngineResult.getStopPrice());
+			order.tif(TimeInForce.OPG);
+			
+			eagleAPI.placeOrModifyOrder(contract, order, orderDataProvider);
+			
+		} catch (EagleException e) {
+			e.printStackTrace();
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new EagleException(EagleError.FAILED_TO_CANCEL_ALL_OPEN_ORDERS, e.getMessage(), e);
+		}
+	
 	}
 }

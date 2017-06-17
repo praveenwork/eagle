@@ -18,7 +18,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
-import com.eagle.contract.model.AccountPosition;
+import com.eagle.contract.model.EagleEngineStopLimitRequest;
 import com.eagle.contract.model.EaglePositionEngineResult;
 import com.eagle.contract.model.Instrument;
 import com.eagle.contract.model.InstrumentPosition;
@@ -33,12 +33,13 @@ import com.eagle.workflow.engine.repository.JobStatus;
 import com.eagle.workflow.engine.repository.PlaceOrderDataJobRepository;
 import com.eagle.workflow.engine.repository.PositionDataJobRepository;
 import com.eagle.workflow.engine.repository.RealTimeDataJobRepository;
+import com.eagle.workflow.engine.service.StopLimitService;
 import com.eagle.workflow.engine.store.EagleEngineDataProcessor;
 import com.eagle.workflow.engine.tws.client.EagleTWSClient;
-import com.eagle.workflow.engine.tws.data.providers.EagleAccountDataProvider;
 import com.eagle.workflow.engine.tws.data.providers.EaglePositionDataProvider;
 import com.eagle.workflow.engine.tws.data.providers.EagleRealTimeMarketDataProvider;
 import com.eagle.workflow.engine.utils.EagleEngineFileUtils;
+import com.eagle.workflow.engine.utils.EagleEnginePriceCalculator;
 
 /**
  * @author ppasupuleti
@@ -79,6 +80,12 @@ public class PositionEngineTaskLet implements Tasklet {
 	@Autowired
 	private EagleTWSClient eagleTWSClient;
 	
+	@Autowired
+	private EagleEnginePriceCalculator eagleEnginePriceCalculator;
+	
+	@Autowired
+	private StopLimitService stopLimitService;
+	
 	
 	private static final String PREDICTION_FILE_SUFFIX = "_predictions.csv";
 	
@@ -100,6 +107,13 @@ public class PositionEngineTaskLet implements Tasklet {
 			String predictionFilePath = null;
 			InstrumentPredictionData predictionData = null;
 			List<String> twsAccounts = eagleTWSClient.getAccounts();
+			
+			// Step 1: Cancel all the positions from the profile.
+			boolean cancelOrdersStatus = cancelOpenPositions();
+			LOGGER.info("cancel open Orders Status : "+cancelOrdersStatus);
+			if(!cancelOrdersStatus){
+				throw new EagleException(EagleError.FAILED_TO_CANCEL_ALL_OPEN_ORDERS);
+			}
 			for (Instrument instrument : instrumentsList) {
 				LOGGER.info("Position Engine Instrument ["+instrument.getSymbol()+"] - Started");
 				predictionFilePath = predictionsDirectory + instrument.getSymbol() + PREDICTION_FILE_SUFFIX;
@@ -107,7 +121,7 @@ public class PositionEngineTaskLet implements Tasklet {
 				if (path == null || Files.notExists(path)) {
 					throw new EagleException(EagleError.INVALID_PREDICTION_PATH, predictionFilePath);
 				}
-				// Step 1a: fetch the last record from the prediction data
+				// Step 2a: fetch the last record from the prediction data
 				predictionData = (InstrumentPredictionData) dataProcessor
 						.getLastRecord(InstrumentPredictionData.class, predictionFilePath, true);
 				if (predictionData == null) {
@@ -115,67 +129,63 @@ public class PositionEngineTaskLet implements Tasklet {
 				}
 				LOGGER.info("Instrument ["+instrument.getSymbol()+"] - prediction Data: "+predictionData.toString());
 
-				// Step 1b: desiredPosition
+				// Step 2b: desiredPosition
 				InstrumentPositionState nextDayPosition  = desiredPosition(predictionData.getNextdretPredicted(), instrument.getPredictionValue());
 
-				// Step 2: Query Interactive Broker to get Positions in the Portfolio.
+				// Step 3: Query Interactive Broker to get Positions in the Portfolio.
 				int openPosition = getInstrumentOpenPosition(instrument, twsAccounts);
-				LOGGER.info("Open Position from Interactive Broker ["+instrument.getSymbol()+"]: "+openPosition);
+				LOGGER.info("Position from Interactive Broker ["+instrument.getSymbol()+"]: "+openPosition);
 
-				// Step 3: Read the leverage factor
+				// Step 4: Read the leverage factor
 				int leverageFactor = instrument.getLeverageFactor();
 				LOGGER.info("Leverage Factor from Configuraiton ["+instrument.getSymbol()+"]: "+leverageFactor);
 
 				InstrumentPositionState todayPosition = determinePosition(openPosition);
 				LOGGER.info("Is Position Long Or Short ["+instrument.getSymbol()+"]: "+todayPosition.name());
 
-				// Step 4: Position Manager
+				// Step 5: Position Manager
 				EaglePositionEngineResult result = applyPositionRules(todayPosition, nextDayPosition, leverageFactor, openPosition);
 				LOGGER.info("Appled Position rules ["+instrument.getSymbol()+"]: "+result.toString());
 
-				//if(result.getPosition() != InstrumentPositionState.DO_NOTHING){
-					// Step 5: Calculating the limit price of the order
-					/* Ex: current price at this sec.. $2001
-					 *    If order is sell (from EaglePositionEngineResult), (2001 -  instrument.getPriceLimit())
-					 *    If order is Buy (from EaglePositionEngineResult), (2001 +  instrument.getPriceLimit())
-					 */
-					// Get current price for instrument from Interactive Broker.
+				if(result.getPosition() != InstrumentPositionState.DO_NOTHING){
 
+					// Step 6: Get current price for instrument from Interactive Broker.
 					double currentPrice = getInstrumentCurrentPrice(instrument, result.getPosition());
+
+					// Step 7: Calculating the limit price of the order
+					/* Here is the sample for limit price calculations
+					 * assume current price at this sec.. $2001
+					 *   -  If order is sell (from EaglePositionEngineResult), (2001 -  instrument.getPriceLimit())
+					 *   -  If order is Buy (from EaglePositionEngineResult), (2001 +  instrument.getPriceLimit())
+					 */
 
 					LOGGER.info("Instrument ["+instrument.getSymbol()+"] current price from IB: "+currentPrice);
 					double limitPrice = currentPrice;
-					if(result.getPosition() == InstrumentPositionState.BUY){
-						limitPrice = currentPrice+(instrument.getPriceLimit());
-					} else if(result.getPosition() == InstrumentPositionState.SELL){
-						limitPrice = currentPrice-(instrument.getPriceLimit());
-					}
+					double stopLimitPrice = currentPrice;
+					double stopPrice = currentPrice;
+					
+					// Calculate Limit Price
+					limitPrice = eagleEnginePriceCalculator.getLimitPrice(instrument, result.getPosition(), currentPrice);
+					// Calculate Stop Price
+					stopPrice  = eagleEnginePriceCalculator.getStopPrice(instrument, result.getPosition(), currentPrice);
+					// Calculate Stop Limit Price
+					stopLimitPrice  = eagleEnginePriceCalculator.getStopLimitPrice(instrument, result.getPosition(), currentPrice);
+
 					result.setLimitPrice(limitPrice);
+					result.setStopLimitPrice(stopLimitPrice);
+					result.setStopPrice(stopPrice);
 					LOGGER.info("Instrument ["+instrument.getSymbol()+"], Postion ["+result.getPosition().name()+"], limit price: "+limitPrice);
 
-					//if ((result.getPosition() != InstrumentPositionState.REVERSING)) { // Check Logic
-						// Step 6: clean all open orders calls (IB)
-						boolean cancelOrdersStatus = cancelOpenPositions();
-						LOGGER.info("cancelOrdersStatus : "+cancelOrdersStatus);
-						
-						// step 7 : submit order for tomorrows position (IB)
-						submitOrder(instrument, result, twsAccounts.get(0));
-
-						// Step 8: Wait for order execution status (from IB)
-						//FIXME:
-					//} else {
-						// Cancel the current STOP Limit order
-						//FIXME:
-					//}
+					// step 8 : submit order for tomorrows position (IB)
+					submitOrder(instrument, result, twsAccounts.get(0));
 					
-					// Step 9: Create STOP LIMIT Order (IB)
-					//setupStopLimit(instrument, twsAccounts);
+					// Step 8: Wait for order execution status (from IB)
 					//FIXME:
 
 					//int finalOpenPosition = getInstrumentOpenPosition(instrument, twsAccounts);
-				/*} else {
+				} else {
 					LOGGER.info("Instrument ["+instrument.getSymbol()+"] Position state is DO_NOTHING");
-				}*/
+				}
 			}
 		} catch (EagleException e) {
 			throw e;
@@ -209,6 +219,7 @@ public class PositionEngineTaskLet implements Tasklet {
 			// nothing to do
 			eaglePositionEngineResult.setPosition(InstrumentPositionState.DO_NOTHING);
 		} else if (InstrumentPositionState.LONG == todayPosition && InstrumentPositionState.SHORT == nextDayPredection) {
+			// Clean all open Orders that will wipe out all STOP-LOSS orders
 			// Need to submit a limit order to sell shares
 			eaglePositionEngineResult.setPosition(InstrumentPositionState.SELL);
 			// Find the contract count using Formula for find the contact
@@ -221,8 +232,8 @@ public class PositionEngineTaskLet implements Tasklet {
 			// Ex: if leverageFactor = 2 and today Open Positions is 2 then tomorrowPrediction(buy) = 2+2 =  4  
 			eaglePositionEngineResult.setContractCount(Math.abs(leverageFactor + openPosition));
 		} else if (InstrumentPositionState.SHORT == todayPosition && InstrumentPositionState.SHORT == nextDayPredection) {
-			// REVERSING
-			eaglePositionEngineResult.setPosition(InstrumentPositionState.REVERSING);
+			// nothing to do
+			eaglePositionEngineResult.setPosition(InstrumentPositionState.DO_NOTHING);
 		}
 		return eaglePositionEngineResult;
 	}
@@ -276,7 +287,6 @@ public class PositionEngineTaskLet implements Tasklet {
 	private boolean cancelOpenPositions(){
 		try {
 			eagleTWSClient.cancelAllOpenOrders();
-			
 			/*cancelOrderDataJobRepository.addJob("CANCEL_ALL_ORDERS", JobStatus.INPROGRESS);
 			ListenableFuture<Boolean> jobStatusListen = cancelOrderDataJobRepository.isJobsDone("CANCEL_ALL_ORDERS");
 			if(jobStatusListen.get()){
@@ -294,6 +304,11 @@ public class PositionEngineTaskLet implements Tasklet {
 		try {
 			eagleTWSClient.placeOrder(instrument, positionEngineResult, account);
 			placeOrderDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
+			EagleEngineStopLimitRequest request = new EagleEngineStopLimitRequest();
+			request.setInstrument(instrument);
+			request.setPositionResult(positionEngineResult);
+			request.setAccountName(account);
+			placeOrderDataJobRepository.addJobDetails(instrument.getSymbol(), request);
 		} catch (EagleException e) {
 			throw e;
 		} catch (Exception e) {
@@ -301,23 +316,14 @@ public class PositionEngineTaskLet implements Tasklet {
 		}
 	}
 	
-	private void setupStopLimit(Instrument instrument, List<String> twsAccounts){
+	private void setupStopLimit(Instrument instrument, EaglePositionEngineResult positionEngineResult, String account){
 		try {
-			eagleTWSClient.getPortifolioPosition(instrument,twsAccounts.get(0));
-			positionDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
-			ListenableFuture<Boolean> jobStatusListen = positionDataJobRepository.isJobsDone(instrument.getSymbol());
-			if(jobStatusListen.get()){
-				AccountPosition accountPosition = EagleAccountDataProvider.getAcccountPositionData(instrument.getSymbol());
-				if (accountPosition.getPosition() != 0) {
-					eagleTWSClient.setStopLimit(instrument);
-				}
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			throw new EagleException(EagleError.FAILED_TO_SETUP_STOP_LIMIT, instrument.getSymbol(), e.getMessage());
+			eagleTWSClient.placeOrder(instrument, positionEngineResult, account);
+			placeOrderDataJobRepository.addJob(instrument.getSymbol(), JobStatus.INPROGRESS);
 		} catch (EagleException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new EagleException(EagleError.FAILED_TO_SETUP_STOP_LIMIT, instrument.getSymbol(), e.getMessage());
+			throw new EagleException(EagleError.FAILED_TO_SUBMIT_ORDER, instrument.getSymbol(), e.getMessage());
 		}
 	}
 }

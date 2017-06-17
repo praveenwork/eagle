@@ -96,11 +96,4 @@ public class YahooFinanceClient implements BrokerHistoricalDataService {
 		return currentData;
 	}
 	
-	public static void main(String[] args) {
-		YahooFinanceClient client = new YahooFinanceClient();
-		Instrument instrument = new FuturesInstrument();
-		instrument.setYfsymbol("^TXN");
-		instrument.setSymbol("ES");
-		client.extractHistoricalData(instrument, 3);
-	}
 }

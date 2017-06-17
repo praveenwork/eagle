@@ -47,6 +47,16 @@ public abstract class Instrument implements Serializable{
 	@JsonProperty(EagleContractConstants.INSTRUMENT_HISTORICAL_DATA_PROVIDER)
 	private String historicalDataProvider;
 	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_STOP_LIMIT_PERCENTAGE)
+	private double stopLimitPercentage;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_STOP_TRIGGER_PERCENTAGE)
+	private double stopTriggerPercentage;
+	
+	@JsonProperty(EagleContractConstants.INSTRUMENT_PRICE_ROUNDING_UNIT)
+	private double priceRoundingUnit;
+
+	
 	public abstract InstrumentType getInstrumentType();
 	
 	public Instrument() {
@@ -138,5 +148,29 @@ public abstract class Instrument implements Serializable{
 
 	public void setHistoricalDataProvider(String historicalDataProvider) {
 		this.historicalDataProvider = historicalDataProvider;
+	}
+
+	public double getStopLimitPercentage() {
+		return stopLimitPercentage;
+	}
+
+	public void setStopLimitPercentage(double stopLimitPercentage) {
+		this.stopLimitPercentage = stopLimitPercentage;
+	}
+
+	public double getStopTriggerPercentage() {
+		return stopTriggerPercentage;
+	}
+
+	public void setStopTriggerPercentage(double stopTriggerPercentage) {
+		this.stopTriggerPercentage = stopTriggerPercentage;
+	}
+
+	public double getPriceRoundingUnit() {
+		return priceRoundingUnit;
+	}
+
+	public void setPriceRoundingUnit(double priceRoundingUnit) {
+		this.priceRoundingUnit = priceRoundingUnit;
 	}
 }
