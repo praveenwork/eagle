@@ -56,8 +56,8 @@ public class EmailServiceImpl implements EmailService{
 			message.setRecipients(Message.RecipientType.TO,
 				InternetAddress.parse(emailProperties.getToEmail()));
 			message.setSubject(emailRequest.getEmailSubject());
-			message.setText(emailRequest.getEmailContent());
-
+			//message.setText(emailRequest.getEmailContent());
+			message.setContent(emailRequest.getEmailContent(),"text/html; charset=utf-8");
 			Transport.send(message);
 
 			LOGGER.debug("Email dispatched.");

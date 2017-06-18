@@ -13,7 +13,7 @@
       "stop_trigger_percentage":0.75,
 	  "stop_limit_percentage":0.02,
 	  "price_rounding_unit":0.25,
-      "historical_data_provider":"IB"
+      "historical_data_provider":"YAHOO"
    },{  
       "name":"ZN",
       "type":"FUTURES",

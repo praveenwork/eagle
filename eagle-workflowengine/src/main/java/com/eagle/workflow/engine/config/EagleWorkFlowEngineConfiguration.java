@@ -131,11 +131,11 @@ public class EagleWorkFlowEngineConfiguration implements InitializingBean{
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
 				//.flow(positionEngine())
-				.flow(extractData())
+				.start(extractData())
 				.next(enrichingData())
 				.next(applyModel())
 				.next(positionEngine())
-				.end()
+				//.end()
 				.build();
 	}
 

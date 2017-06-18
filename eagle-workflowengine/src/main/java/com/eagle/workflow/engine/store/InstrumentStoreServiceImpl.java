@@ -29,8 +29,11 @@ import org.supercsv.io.CsvMapWriter;
 import org.supercsv.io.ICsvMapWriter;
 import org.supercsv.prefs.CsvPreference;
 
+import com.eagle.contract.model.EagleEngineJobs;
+import com.eagle.contract.model.EmailRequest;
 import com.eagle.contract.model.InstrumentHistoricalData;
 import com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties;
+import com.eagle.workflow.engine.repository.EagleEngineEmailRepository;
 import com.eagle.workflow.engine.utils.EagleEngineFileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,6 +54,9 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 	
 	@Autowired
 	private EagleEngineDataProcessor<InstrumentHistoricalData> dataProcessor;
+	
+	@Autowired
+	private EagleEngineEmailRepository eagleEngineEmailRepository;
 
 	public InstrumentStoreServiceImpl(EagleWorkFlowEngineProperties engineProperties) {
 		this.engineProperties = engineProperties;
@@ -112,6 +118,7 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 		} else {
 			historicalData.setId(1);
 		}
+		updateEmailContent(historicalData);
 		return dataProcessor.writeData(path, historicalData);
 	}
 	
@@ -240,5 +247,25 @@ public class InstrumentStoreServiceImpl implements InstrumentStoreService {
 			}
 		}
 		return new Boolean(false);
+	}
+	
+	//-----------Helpers----------
+	private void updateEmailContent(InstrumentHistoricalData historicalData){
+		EmailRequest emailRequest = eagleEngineEmailRepository.getJobEmailRequest(EagleEngineJobs.EXTRACTDATA.name());
+		StringBuilder emailContent = new StringBuilder(emailRequest.getEmailContent());
+		emailContent.append("<table>");
+		emailContent.append("<tr><td><b>Instrument</b> 	:</td><td>"+historicalData.getInstrument().getSymbol()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Date</b> 		:</td><td>"+historicalData.getDate()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Open</b> 		:</td><td>"+historicalData.getOpen()).append("</td></tr>");
+		emailContent.append("<tr><td><b>High</b> 		:</td><td>"+historicalData.getHigh()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Low</b> 		:</td><td>"+historicalData.getLow()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Close</b> 		:</td><td>"+historicalData.getClose()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Volume</b>		:</td><td>"+historicalData.getVolume()).append("</td></tr>");
+		emailContent.append("<tr><td><b>Adj Close</b> 	:</td><td>"+historicalData.getAdjClose()).append("</td></tr>");
+		emailContent.append("</table>");
+		emailContent.append("<br> <br>");
+		
+		emailRequest.setEmailContent(emailContent.toString());
+		eagleEngineEmailRepository.addJobEmailRequest(EagleEngineJobs.EXTRACTDATA.name(), emailRequest);
 	}
 }

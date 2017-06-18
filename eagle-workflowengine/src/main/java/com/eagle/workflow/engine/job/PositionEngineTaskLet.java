@@ -18,8 +18,11 @@ import org.springframework.util.concurrent.ListenableFuture;
 
 import com.eagle.boot.config.exception.EagleError;
 import com.eagle.boot.config.exception.EagleException;
+import com.eagle.contract.model.EagleEngineJobs;
 import com.eagle.contract.model.EagleEngineStopLimitRequest;
+import com.eagle.contract.model.EaglePositionEngineEmailData;
 import com.eagle.contract.model.EaglePositionEngineResult;
+import com.eagle.contract.model.EmailRequest;
 import com.eagle.contract.model.Instrument;
 import com.eagle.contract.model.InstrumentPosition;
 import com.eagle.contract.model.InstrumentPositionState;
@@ -28,16 +31,19 @@ import com.eagle.contract.model.InstrumentRealTimeData;
 import com.eagle.workflow.engine.config.EagleModelProperties;
 import com.eagle.workflow.engine.config.EagleWorkFlowEngineProperties;
 import com.eagle.workflow.engine.repository.CancelOrderDataJobRepository;
+import com.eagle.workflow.engine.repository.EagleEngineEmailRepository;
 import com.eagle.workflow.engine.repository.InstrumentRepository;
 import com.eagle.workflow.engine.repository.JobStatus;
 import com.eagle.workflow.engine.repository.PlaceOrderDataJobRepository;
 import com.eagle.workflow.engine.repository.PositionDataJobRepository;
 import com.eagle.workflow.engine.repository.RealTimeDataJobRepository;
+import com.eagle.workflow.engine.service.EmailService;
 import com.eagle.workflow.engine.service.StopLimitService;
 import com.eagle.workflow.engine.store.EagleEngineDataProcessor;
 import com.eagle.workflow.engine.tws.client.EagleTWSClient;
 import com.eagle.workflow.engine.tws.data.providers.EaglePositionDataProvider;
 import com.eagle.workflow.engine.tws.data.providers.EagleRealTimeMarketDataProvider;
+import com.eagle.workflow.engine.utils.EagleEngineDateUtils;
 import com.eagle.workflow.engine.utils.EagleEngineFileUtils;
 import com.eagle.workflow.engine.utils.EagleEnginePriceCalculator;
 
@@ -86,6 +92,14 @@ public class PositionEngineTaskLet implements Tasklet {
 	@Autowired
 	private StopLimitService stopLimitService;
 	
+	@Autowired
+	private EagleEngineDateUtils eagleEngineDateUtils;
+	
+	@Autowired
+	private EagleEngineEmailRepository eagleEngineEmailRepository;
+	
+	@Autowired
+	private EmailService emailService;
 	
 	private static final String PREDICTION_FILE_SUFFIX = "_predictions.csv";
 	
@@ -108,6 +122,12 @@ public class PositionEngineTaskLet implements Tasklet {
 			InstrumentPredictionData predictionData = null;
 			List<String> twsAccounts = eagleTWSClient.getAccounts();
 			
+			// Email 
+			EmailRequest emailRequest = new EmailRequest();
+			emailRequest.setEmailSubject("Eagle - Position Details - "+eagleEngineDateUtils.getExtractDataRunDate());
+			emailRequest.setEmailContent("");
+			eagleEngineEmailRepository.addJobEmailRequest(EagleEngineJobs.POSTIONENGINE.name(), emailRequest);
+			EaglePositionEngineEmailData emailData = new EaglePositionEngineEmailData();
 			// Step 1: Cancel all the positions from the profile.
 			boolean cancelOrdersStatus = cancelOpenPositions();
 			LOGGER.info("cancel open Orders Status : "+cancelOrdersStatus);
@@ -121,6 +141,7 @@ public class PositionEngineTaskLet implements Tasklet {
 				if (path == null || Files.notExists(path)) {
 					throw new EagleException(EagleError.INVALID_PREDICTION_PATH, predictionFilePath);
 				}
+				emailData.setSymbol(instrument.getSymbol());
 				// Step 2a: fetch the last record from the prediction data
 				predictionData = (InstrumentPredictionData) dataProcessor
 						.getLastRecord(InstrumentPredictionData.class, predictionFilePath, true);
@@ -129,18 +150,25 @@ public class PositionEngineTaskLet implements Tasklet {
 				}
 				LOGGER.info("Instrument ["+instrument.getSymbol()+"] - prediction Data: "+predictionData.toString());
 
+				emailData.setPredictionData(predictionData);
+				
 				// Step 2b: desiredPosition
 				InstrumentPositionState nextDayPosition  = desiredPosition(predictionData.getNextdretPredicted(), instrument.getPredictionValue());
-
+				emailData.setNextDayPosition(nextDayPosition);
+				
 				// Step 3: Query Interactive Broker to get Positions in the Portfolio.
 				int openPosition = getInstrumentOpenPosition(instrument, twsAccounts);
+				emailData.setIBPositions(openPosition);
 				LOGGER.info("Position from Interactive Broker ["+instrument.getSymbol()+"]: "+openPosition);
 
 				// Step 4: Read the leverage factor
 				int leverageFactor = instrument.getLeverageFactor();
+				emailData.setLeverageFactor(leverageFactor);
 				LOGGER.info("Leverage Factor from Configuraiton ["+instrument.getSymbol()+"]: "+leverageFactor);
 
 				InstrumentPositionState todayPosition = determinePosition(openPosition);
+				emailData.setTodayPosition(todayPosition);
+				
 				LOGGER.info("Is Position Long Or Short ["+instrument.getSymbol()+"]: "+todayPosition.name());
 
 				// Step 5: Position Manager
@@ -178,15 +206,21 @@ public class PositionEngineTaskLet implements Tasklet {
 
 					// step 8 : submit order for tomorrows position (IB)
 					submitOrder(instrument, result, twsAccounts.get(0));
-					
+					emailData.setOrderSubmited(true);
 					// Step 8: Wait for order execution status (from IB)
 					//FIXME:
 
 					//int finalOpenPosition = getInstrumentOpenPosition(instrument, twsAccounts);
 				} else {
+					emailData.setOrderSubmited(false);
 					LOGGER.info("Instrument ["+instrument.getSymbol()+"] Position state is DO_NOTHING");
 				}
+				emailData.setEaglePositionEngineResult(result);
+				updateEmailContent(emailData.getEmailContent());
 			}
+			emailRequest = eagleEngineEmailRepository.getJobEmailRequest(EagleEngineJobs.POSTIONENGINE.name());
+			emailService.send(emailRequest);
+			eagleEngineEmailRepository.removeJobEmailRequests(EagleEngineJobs.POSTIONENGINE.name());
 		} catch (EagleException e) {
 			throw e;
 		} catch (Exception e) {
@@ -325,5 +359,14 @@ public class PositionEngineTaskLet implements Tasklet {
 		} catch (Exception e) {
 			throw new EagleException(EagleError.FAILED_TO_SUBMIT_ORDER, instrument.getSymbol(), e.getMessage());
 		}
+	}
+	
+	private void updateEmailContent(String emailData){
+		EmailRequest emailRequest = eagleEngineEmailRepository.getJobEmailRequest(EagleEngineJobs.POSTIONENGINE.name());
+		StringBuilder emailContent = new StringBuilder(emailRequest.getEmailContent());
+		emailContent.append(emailData);
+		emailContent.append("<br> <br>");
+		emailRequest.setEmailContent(emailContent.toString());
+		eagleEngineEmailRepository.addJobEmailRequest(EagleEngineJobs.POSTIONENGINE.name(), emailRequest);
 	}
 }

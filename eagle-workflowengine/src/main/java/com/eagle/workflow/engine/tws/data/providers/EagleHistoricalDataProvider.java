@@ -45,6 +45,7 @@ public class EagleHistoricalDataProvider implements IHistoricalDataHandler{
 		LOGGER.debug(historicalData.toString());
 		//Store Data in file
 		instrumentStoreService.storeRawData(historicalData);
+		
 	}
 
 	@Override

@@ -19,6 +19,11 @@ public class EagleEngineDateUtils {
 	
 	private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	
+	public String getExtractDataRunDate(){
+		LocalDate todayDate = LocalDate.now();
+		return dateFormatter.format(todayDate);
+	}
+	
 	public String getEnrichDataToolRunDate(){
 		LocalDate todayDate = LocalDate.now();
 		if(todayDate.getDayOfWeek()==DayOfWeek.SATURDAY){

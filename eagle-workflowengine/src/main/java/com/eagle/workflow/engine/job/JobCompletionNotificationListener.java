@@ -13,7 +13,9 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.eagle.contract.model.EagleEngineJobs;
 import com.eagle.contract.model.EmailRequest;
+import com.eagle.workflow.engine.repository.EagleEngineEmailRepository;
 import com.eagle.workflow.engine.service.EmailService;
 import com.eagle.workflow.engine.store.EagleEngineDataProcessor;
 
@@ -30,6 +32,10 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 	
 	@Autowired
 	private EagleEngineDataProcessor dataProcessor;
+	
+	@Autowired
+	private EagleEngineEmailRepository eagleEngineEmailRepository;
+	
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
 		String jobName = jobExecution.getJobInstance().getJobName() ;
@@ -51,30 +57,11 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 					jobName, jobExecution.getId(), jobExecution.getJobId(), jobExecution.getStartTime().toString(),
 					exceptionList.size(), exitStatus);
 			emailContent = emailSubject;//FIXME: provide the email content
-		} else {
-			emailSubject = format("Job: %s, job execution id: %d, job id: %d, succesfully completed status: %s",
-					jobName, jobExecution.getId(), jobExecution.getJobId(), jobExecution.getStartTime().toString(),
-					exceptionList.size(), exitStatus);
-			if("extractDataJob".equalsIgnoreCase(jobName)){
-				emailContent = emailSubject; //FIXME: provide the email content
-			} else if("enrichingData".equalsIgnoreCase(jobName)){
-				emailContent = emailSubject; //FIXME: provide the email content
-			} else if("applyModel".equalsIgnoreCase(jobName)){
-				emailContent = emailSubject; //FIXME: provide the email content
-			} else if("positionEngine".equalsIgnoreCase(jobName)){
-				emailContent = emailSubject; //FIXME: provide the email content
-			} else {
-				emailContent = emailSubject; //FIXME: provide the email content
-			}
-			LOGGER.debug("Email Subject: "+emailSubject);
-			LOGGER.debug("Email Content: "+emailContent);
-			
-			//sending Mail
-			LOGGER.debug("Sending email...");
-			EmailRequest emailRequest = new EmailRequest();
+			EmailRequest emailRequest =  new EmailRequest();
 			emailRequest.setEmailContent(emailContent);
 			emailRequest.setEmailSubject(emailSubject);
 			emailService.send(emailRequest);
+		} else {
 			
 		}
 		if(jobExecution.getStatus() == BatchStatus.COMPLETED) {
